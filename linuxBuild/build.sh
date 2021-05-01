@@ -6,10 +6,10 @@ NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 #Build settings
-BUILD_OGRE=false
-BUILD_BULLET=false
-BUILD_SQUIRREL=false
-BUILD_ENTITYX=false
+BUILD_OGRE=true
+BUILD_BULLET=true
+BUILD_SQUIRREL=true
+BUILD_ENTITYX=true
 BUILD_COLIBRI=true
 
 #Ogre
@@ -74,10 +74,10 @@ if [ $BUILD_BULLET = true ]; then
 
     git clone --branch ${BULLET_TARGET_BRANCH} https://github.com/bulletphysics/bullet3.git ${BULLET_DIR}
     cd ${BULLET_DIR}
-    mkdir build
-    cd build
-    cmake ${CMAKE_BUILD_SETTINGS} ..
-    make -j${NUM_THREADS}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping bullet build"
 fi
@@ -88,10 +88,10 @@ if [ $BUILD_SQUIRREL = true ]; then
 
     git clone --branch ${SQUIRREL_TARGET_BRANCH} https://github.com/albertodemichelis/squirrel.git ${SQUIRREL_DIR}
     cd ${SQUIRREL_DIR}
-    mkdir build
-    cd build
-    cmake ${CMAKE_BUILD_SETTINGS} ..
-    make -j${NUM_THREADS}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping squirrel build"
 fi
@@ -102,23 +102,10 @@ if [ $BUILD_ENTITYX = true ]; then
 
     git clone --branch ${ENTITYX_TARGET_BRANCH} https://github.com/alecthomas/entityx.git ${ENTITYX_DIR}
     cd ${ENTITYX_DIR}
-    mkdir build
-    cd build
-    cmake ${CMAKE_BUILD_SETTINGS} ..
-    make -j${NUM_THREADS}
-else
-    echo "Skipping entityX build"
-fi
-
-if [ $BUILD_ENTITYX = true ]; then
-    echo "building entityX"
-
-    git clone --branch ${ENTITYX_TARGET_BRANCH} https://github.com/alecthomas/entityx.git ${ENTITYX_DIR}
-    cd ${ENTITYX_DIR}
-    mkdir build
-    cd build
-    cmake ${CMAKE_BUILD_SETTINGS} ..
-    make -j${NUM_THREADS}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping entityX build"
 fi
@@ -128,17 +115,17 @@ if [ $BUILD_COLIBRI = true ]; then
 
     git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
     cd ${COLIBRI_DIR}
-    cd Dependencies
-    rm Ogre
+    #cd Dependencies
+    #rm Ogre
     #Link relative to the build directory, not the container.
     #ln -s ../../${OGRE_DIR_NAME} Ogre
-    cd ..
-    mkdir build
-    cd build
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE ..
+    #cd ..
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE ../..
     make -j${NUM_THREADS} || exit 1
 else
-    echo "Skipping entityX build"
+    echo "Skipping colibri build"
 fi
 
 #googletest
@@ -146,9 +133,9 @@ fi
 
     git clone https://github.com/google/googletest.git ${GOOGLETEST_DIR}
     cd ${GOOGLETEST_DIR}
-    mkdir build
-    cd build
-    cmake ${CMAKE_BUILD_SETTINGS} ..
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} ../..
     make -j${NUM_THREADS}
 
 #Clone helper libs that don't directly need compiling.
