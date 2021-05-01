@@ -21,7 +21,13 @@ WORKDIR /avbuild/build
 COPY entrypoint.sh /avbuild/scripts/entrypoint.sh
 RUN chmod +x /avbuild/scripts/entrypoint.sh
 
-# RUN useradd -ms /bin/bash builder
-# USER builder
+#Resolves a problem with root permissions when building ogre deps.
+#RUN mkdir -p /usr/local/lib/pkgconfig
+RUN chmod 777 /usr/local/lib/
+RUN chmod 777 /usr/local/include
+RUN chmod 777 /usr/local/bin
+
+RUN useradd -ms /bin/bash builder
+USER builder
 
 #ENTRYPOINT ["/avbuild/scripts/entrypoint.sh"]
