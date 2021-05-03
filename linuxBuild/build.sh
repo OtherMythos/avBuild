@@ -1,7 +1,12 @@
 #!/bin/bash -x
 
+START_DIR="$1"
+if [ -v ${1} ]; then
+    echo "Please provide a build directory path."
+    exit 1
+fi
+
 #Variables
-START_DIR="/avbuild/build"
 NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
@@ -11,6 +16,7 @@ BUILD_BULLET=true
 BUILD_SQUIRREL=true
 BUILD_ENTITYX=true
 BUILD_COLIBRI=true
+BUILD_DETOUR=true
 
 #Ogre
 OGRE_TARGET_BRANCH="v2-2"
@@ -34,6 +40,10 @@ ENTITYX_DIR="${START_DIR}/entityx"
 COLIBRI_TARGET_BRANCH="master"
 COLIBRI_DIR="${START_DIR}/colibri"
 
+#RecastDetour
+DETOUR_TARGET_BRANCH="master"
+DETOUR_DIR="${START_DIR}/recastdetour"
+
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
 #Start
@@ -52,7 +62,8 @@ if [ $BUILD_OGRE = true ]; then
     cd Dependencies
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    #Force c++11 because freeimage seems broken in places.
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     make -j${NUM_THREADS}
     make install
 
@@ -61,8 +72,8 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
     #Seems to be a bug in Ogre, I have to run cmake twice.
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE ../..
     make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping ogre build"
@@ -110,6 +121,7 @@ else
     echo "Skipping entityX build"
 fi
 
+#ColibriGUI
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
@@ -128,6 +140,20 @@ else
     echo "Skipping colibri build"
 fi
 
+#RecastDetour
+if [ $BUILD_DETOUR = true ]; then
+    echo "building RecastDetour"
+
+    git clone --branch ${DETOUR_TARGET_BRANCH} https://github.com/recastnavigation/recastnavigation.git ${DETOUR_DIR}
+    cd ${DETOUR_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    make -j${NUM_THREADS} || exit 1
+else
+    echo "Skipping RecastDetour build"
+fi
+
 #googletest
     echo "building googletest"
 
@@ -143,3 +169,4 @@ cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git
 git clone https://github.com/gabime/spdlog.git
 git clone https://github.com/leethomason/tinyxml2.git
+git clone https://github.com/Tencent/rapidjson.git
