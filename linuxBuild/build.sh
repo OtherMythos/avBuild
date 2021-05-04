@@ -72,8 +72,8 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
     #Seems to be a bug in Ogre, I have to run cmake twice.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE ../..
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping ogre build"
@@ -134,7 +134,8 @@ if [ $BUILD_COLIBRI = true ]; then
     #cd ..
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE ../..
+    #Force c++11 to solve some problems with bleeding edge compilers.
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping colibri build"
@@ -148,7 +149,7 @@ if [ $BUILD_DETOUR = true ]; then
     cd ${DETOUR_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
     make -j${NUM_THREADS} || exit 1
 else
     echo "Skipping RecastDetour build"
@@ -162,7 +163,7 @@ fi
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} ../..
-    make -j${NUM_THREADS}
+    make -j${NUM_THREADS} || exit 1
 
 #Clone helper libs that don't directly need compiling.
 cd ${START_DIR}
