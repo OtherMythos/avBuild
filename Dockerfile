@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 ENV TZ=Europe/London
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y \
     libgl1-mesa-dev \
     libglu1-mesa-dev \
     rapidjson-dev \
-    libsdl2-dev
+    libsdl2-dev \
+    wget \
+    strace \
+    patchelf
 
 RUN mkdir -p /avbuild/build
 WORKDIR /avbuild/build
@@ -26,6 +29,9 @@ RUN chmod +x /avbuild/scripts/entrypoint.sh
 RUN chmod 777 /usr/local/lib/
 RUN chmod 777 /usr/local/include
 RUN chmod 777 /usr/local/bin
+
+RUN wget -O /usr/local/bin/linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+RUN chmod +x /usr/local/bin/linuxdeploy
 
 RUN useradd -ms /bin/bash builder
 USER builder
