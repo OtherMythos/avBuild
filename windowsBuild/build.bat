@@ -1,4 +1,4 @@
-::@echo off
+@echo off
 SETLOCAL
 
 SET "START_DIR=%1%"
@@ -10,12 +10,13 @@ SET NUM_THREADS=4
 SET "CMAKE_BUILD_TYPE=Debug"
 SET "CMAKE_BUILD_SETTINGS=-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 :: Build settings
-SET BUILD_OGRE=false
-SET BUILD_BULLET=false
+SET BUILD_OGRE=true
+SET BUILD_BULLET=true
 SET BUILD_SQUIRREL=true
 SET BUILD_ENTITYX=true
 SET BUILD_COLIBRI=true
 SET BUILD_DETOUR=true
+SET BUILD_GOOGLETEST=true
 
 ::Ogre
 SET "OGRE_TARGET_BRANCH=v2-2"
@@ -58,6 +59,8 @@ IF %BUILD_OGRE% equ true (
 
     ::Build dependencies first.
     cd Dependencies
+    ::Work around to get rapidjson correctly installed
+    robocopy "%OGRE_DIR%\Dependencies\src\rapidjson\include" "%OGRE_DIR%\Dependencies\src\rapidjson\rapidjson" /E
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DOGREDEPS_INSTALL_DEV=FALSE ../..
@@ -105,9 +108,57 @@ IF %BUILD_ENTITYX% equ true (
     cd %ENTITYX_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False ../..
+    cmake %CMAKE_BUILD_SETTINGS% -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False ../..
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ENTITYX.sln
 )
+
+::Colibri
+IF %BUILD_COLIBRI% equ true (
+    echo "building ColibriGUI"
+    git clone --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
+    cd %COLIBRI_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+
+    ::Frustrating bodge I do to get colibri to see the rapidjson include
+    mkdir "Dependencies\Ogre\Dependencies\include"
+    robocopy "%OGRE_DIR%\Dependencies\src\rapidjson" "Dependencies\Ogre\Dependencies\include" /E
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ColibriGui.sln
+)
+
+::RecastDetour
+IF %BUILD_DETOUR% equ true (
+    echo "building RecastDetour"
+
+    git clone --branch %DETOUR_TARGET_BRANCH% https://github.com/recastnavigation/recastnavigation.git %DETOUR_DIR%
+    cd %DETOUR_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" RecastNavigation.sln
+)
+
+
+::googletest
+IF %BUILD_GOOGLETEST% equ true (
+    echo "building googletest"
+
+    git clone https://github.com/google/googletest.git %GOOGLETEST_DIR%
+    cd %GOOGLETEST_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" googletest-distribution.sln
+)
+
+::#Clone helper libs that don't directly need compiling.
+cd %START_DIR%
+git clone https://github.com/wjakob/filesystem.git
+git clone https://github.com/gabime/spdlog.git
+git clone https://github.com/leethomason/tinyxml2.git
+git clone https://github.com/Tencent/rapidjson.git
+
 
 exit 1
 
