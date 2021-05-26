@@ -23,6 +23,7 @@ OGRE_TARGET_BRANCH="v2-2"
 OGRE_DIR_NAME="ogre2"
 OGRE_DIR="${START_DIR}/${OGRE_DIR_NAME}"
 OGRE_BIN_DIR="${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}"
+OGRE_DEPS_DIR="${START_DIR}/ogre-next-deps"
 
 #Bullet
 BULLET_TARGET_BRANCH="master"
@@ -55,26 +56,28 @@ if [ $BUILD_OGRE = true ]; then
 
     #Clone
     git clone --branch ${OGRE_TARGET_BRANCH} https://github.com/OGRECave/ogre-next ${OGRE_DIR}
-    cd ${OGRE_DIR}
-    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps Dependencies
+    #cd ${OGRE_DIR}
+    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
 
     #Build dependencies first.
-    cd Dependencies
+    cd ${OGRE_DEPS_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_CXX_STANDARD=11 ../..
     make -j${NUM_THREADS}
     make install
 
     #Build Ogre
     cd ${OGRE_DIR}
+    ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
-    #Seems to be a bug in Ogre, I have to run cmake twice.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_INSTALL_DEV=FALSE -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    #Bung the installed files off somewhere else.
+    mkdir installDir
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=./installDir -DCMAKE_CXX_STANDARD=11 ../..
     make -j${NUM_THREADS} || exit 1
+    make install
 else
     echo "Skipping ogre build"
 fi
