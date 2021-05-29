@@ -83,7 +83,7 @@ IF %BUILD_BULLET% equ true (
     cd %BULLET_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet ../..
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet3 ../..
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 

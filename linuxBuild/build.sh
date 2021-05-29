@@ -75,8 +75,6 @@ if [ $BUILD_OGRE = true ]; then
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
-    #Bung the installed files off somewhere else.
-    mkdir installDir
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 ../..
     make -j${NUM_THREADS} || exit 1
     make install
@@ -92,7 +90,7 @@ if [ $BUILD_BULLET = true ]; then
     cd ${BULLET_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else
@@ -157,7 +155,7 @@ if [ $BUILD_DETOUR = true ]; then
     cd ${DETOUR_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else
