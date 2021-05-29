@@ -18,11 +18,14 @@ SET BUILD_COLIBRI=true
 SET BUILD_DETOUR=true
 SET BUILD_GOOGLETEST=true
 
+SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
+
 ::Ogre
 SET "OGRE_TARGET_BRANCH=v2-2"
 SET "OGRE_DIR_NAME=ogre2"
 SET "OGRE_DIR=%START_DIR%\%OGRE_DIR_NAME%"
 SET "OGRE_BIN_DIR=%OGRE_DIR%\build\%CMAKE_BUILD_TYPE%"
+SET "OGRE_DEPS_DIR=%START_DIR%\ogre-next-deps"
 
 ::Bullet
 SET "BULLET_TARGET_BRANCH=master"
@@ -54,26 +57,22 @@ IF %BUILD_OGRE% equ true (
 
     ::Clone
     git clone --branch %OGRE_TARGET_BRANCH% https://github.com/OGRECave/ogre-next %OGRE_DIR%
-    cd %OGRE_DIR%
-    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps Dependencies
+    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps %OGRE_DEPS_DIR%
 
     ::Build dependencies first.
-    cd Dependencies
-    ::Work around to get rapidjson correctly installed
-    robocopy "%OGRE_DIR%\Dependencies\src\rapidjson\include" "%OGRE_DIR%\Dependencies\src\rapidjson\rapidjson" /E
+    cd %OGRE_DEPS_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DOGREDEPS_INSTALL_DEV=FALSE ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" OGREDEPS.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_CXX_STANDARD=11 ../..
+    ::This performs both the build and install.
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 
     ::Build Ogre
     cd %OGRE_DIR%
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
-    cmake -DOGRE_DEPENDENCIES_DIR=C:\build\ogre2\Dependencies\build\Debug\ogredeps -DCMAKE_BUILD_TYPE=Debug -DRapidjson_INCLUDE_DIR=C:\build\ogre2\Dependencies\src\rapidjson ..\..
-    cmake -DOGRE_DEPENDENCIES_DIR=C:\build\ogre2\Dependencies\build\Debug\ogredeps -DCMAKE_BUILD_TYPE=Debug -DRapidjson_INCLUDE_DIR=C:\build\ogre2\Dependencies\src\rapidjson ..\..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" OGRE.sln
-
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::Bullet
@@ -84,8 +83,8 @@ IF %BUILD_BULLET% equ true (
     cd %BULLET_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" BULLET_PHYSICS.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::Squirrel
@@ -96,8 +95,8 @@ IF %BUILD_SQUIRREL% equ true (
     cd %SQUIRREL_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" SQUIRREL.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\squirrel ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::EntityX
@@ -108,8 +107,8 @@ IF %BUILD_ENTITYX% equ true (
     cd %ENTITYX_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ENTITYX.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\entityx ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::Colibri
@@ -121,7 +120,8 @@ IF %BUILD_COLIBRI% equ true (
 
     ::Frustrating bodge I do to get colibri to see the rapidjson include
     mkdir "Dependencies\Ogre\Dependencies\include"
-    robocopy "%OGRE_DIR%\Dependencies\src\rapidjson" "Dependencies\Ogre\Dependencies\include" /E
+    robocopy "%OGRE_DEPS_DIR%\src\rapidjson" "Dependencies\Ogre\Dependencies\include" /E
+    move "Dependencies\Ogre\Dependencies\include\include" "Dependencies\Ogre\Dependencies\include\rapidjson"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE ../..
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ColibriGui.sln
@@ -135,8 +135,8 @@ IF %BUILD_DETOUR% equ true (
     cd %DETOUR_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" RecastNavigation.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\recastdetour ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 
@@ -148,8 +148,8 @@ IF %BUILD_GOOGLETEST% equ true (
     cd %GOOGLETEST_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" googletest-distribution.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\googletest ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::#Clone helper libs that don't directly need compiling.
