@@ -18,6 +18,8 @@ BUILD_ENTITYX=true
 BUILD_COLIBRI=true
 BUILD_DETOUR=true
 
+INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
+
 #Ogre
 OGRE_TARGET_BRANCH="v2-2"
 OGRE_DIR_NAME="ogre2"
@@ -75,7 +77,7 @@ if [ $BUILD_OGRE = true ]; then
     cd ${OGRE_BIN_DIR}
     #Bung the installed files off somewhere else.
     mkdir installDir
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=./installDir -DCMAKE_CXX_STANDARD=11 ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else
@@ -90,8 +92,9 @@ if [ $BUILD_BULLET = true ]; then
     cd ${BULLET_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet ../..
     make -j${NUM_THREADS} || exit 1
+    make install
 else
     echo "Skipping bullet build"
 fi
@@ -104,8 +107,9 @@ if [ $BUILD_SQUIRREL = true ]; then
     cd ${SQUIRREL_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel ../..
     make -j${NUM_THREADS} || exit 1
+    make install
 else
     echo "Skipping squirrel build"
 fi
@@ -118,8 +122,9 @@ if [ $BUILD_ENTITYX = true ]; then
     cd ${ENTITYX_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
     make -j${NUM_THREADS} || exit 1
+    make install
 else
     echo "Skipping entityX build"
 fi
@@ -152,8 +157,9 @@ if [ $BUILD_DETOUR = true ]; then
     cd ${DETOUR_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
     make -j${NUM_THREADS} || exit 1
+    make install
 else
     echo "Skipping RecastDetour build"
 fi
@@ -165,8 +171,9 @@ fi
     cd ${GOOGLETEST_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
     make -j${NUM_THREADS} || exit 1
+    make install
 
 #Clone helper libs that don't directly need compiling.
 cd ${START_DIR}
