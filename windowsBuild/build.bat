@@ -1,4 +1,4 @@
-@echo off
+::@echo off
 SETLOCAL
 
 SET "START_DIR=%1%"
@@ -84,7 +84,12 @@ IF %BUILD_BULLET% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet3 ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" BULLET_PHYSICS.sln
+    ::Don't do the provided install for bullet. It had some weirdness.
+    mkdir %INSTALL_DIR%\bullet3\include
+    mkdir %INSTALL_DIR%\bullet3\lib
+    robocopy .\lib\Debug\ %INSTALL_DIR%\bullet3\lib *.lib
+    robocopy %BULLET_DIR%\src %INSTALL_DIR%\bullet3\include\bullet /S
 )
 
 ::Squirrel
@@ -114,7 +119,7 @@ IF %BUILD_ENTITYX% equ true (
 ::Colibri
 IF %BUILD_COLIBRI% equ true (
     echo "building ColibriGUI"
-    git clone --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
+    git clone --branch %COLIBRI_TARGET_BRANCH% https://github.com/edherbert/colibrigui.git %COLIBRI_DIR%
     cd %COLIBRI_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
@@ -123,8 +128,8 @@ IF %BUILD_COLIBRI% equ true (
     robocopy "%OGRE_DEPS_DIR%\src\rapidjson" "Dependencies\Ogre\Dependencies\include" /E
     move "Dependencies\Ogre\Dependencies\include\include" "Dependencies\Ogre\Dependencies\include\rapidjson"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ColibriGui.sln
+    cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\colibri ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::RecastDetour
@@ -152,12 +157,20 @@ IF %BUILD_GOOGLETEST% equ true (
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
+cd %INSTALL_DIR%
+
+::Get SDL2 as the built binary on Windows. It's hosted on Mercurial which made it difficult.
+rmdir /S /Q SDL2 SDL2-2.0.14
+curl --url https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip --output "%INSTALL_DIR%\sdl2.zip"
+tar -xf sdl2.zip
+del sdl2.zip
+ren SDL2-2.0.14 SDL2
+
 ::#Clone helper libs that don't directly need compiling.
-cd %START_DIR%
-git clone https://github.com/wjakob/filesystem.git
-git clone https://github.com/gabime/spdlog.git
-git clone https://github.com/leethomason/tinyxml2.git
-git clone https://github.com/Tencent/rapidjson.git
+git clone https://github.com/wjakob/filesystem.git %INSTALL_DIR%\filesystem
+git clone https://github.com/gabime/spdlog.git %INSTALL_DIR%\spdlog
+git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
+git clone https://github.com/Tencent/rapidjson.git %INSTALL_DIR%\rapidjson
 
 
 exit 1
