@@ -83,7 +83,7 @@ IF %BUILD_BULLET% equ true (
     cd %BULLET_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet3 ../..
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet3 -DUSE_MSVC_RUNTIME_LIBRARY_DLL=True ../..
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" BULLET_PHYSICS.sln
     ::Don't do the provided install for bullet. It had some weirdness.
     mkdir %INSTALL_DIR%\bullet3\include
