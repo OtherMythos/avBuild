@@ -17,6 +17,7 @@ BUILD_SQUIRREL=true
 BUILD_ENTITYX=true
 BUILD_COLIBRI=true
 BUILD_DETOUR=true
+BUILD_SDL2=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -46,6 +47,9 @@ COLIBRI_DIR="${START_DIR}/colibri"
 #RecastDetour
 DETOUR_TARGET_BRANCH="master"
 DETOUR_DIR="${START_DIR}/recastdetour"
+
+#SDL2
+SDL2_DIR="${START_DIR}/SDL2"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -161,6 +165,29 @@ if [ $BUILD_DETOUR = true ]; then
     make install
 else
     echo "Skipping RecastDetour build"
+fi
+
+#SDL2
+#Generally provided by the distro and dependencies as well, however it's convenient for the windows build.
+if [ $BUILD_SDL2 = true ]; then
+    echo "building SDL2"
+    cd $START_DIR
+
+    #They don't host a git repo so just get the source tarball.
+    SDL2_FILE_NAME="SDL2-2.0.14"
+    SDL2_FILE_NAME_TAR="${SDL2_FILE_NAME}.tar.gz"
+    if [ ! -f ${SDL2_FILE_NAME_TAR} ]; then
+        wget https://www.libsdl.org/release/${SDL2_FILE_NAME_TAR}
+    fi
+    tar -xf ${SDL2_FILE_NAME_TAR}
+    cd ${SDL2_FILE_NAME}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    make -j${NUM_THREADS} || exit 1
+    make install
+else
+    echo "Skipping SDL2 build"
 fi
 
 #googletest
