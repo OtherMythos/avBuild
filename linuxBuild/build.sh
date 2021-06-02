@@ -137,11 +137,13 @@ if [ $BUILD_COLIBRI = true ]; then
 
     git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/edherbert/colibrigui.git ${COLIBRI_DIR}
     cd ${COLIBRI_DIR}
-    #cd Dependencies
-    #rm Ogre
+
+    cd Dependencies
+    rm Ogre
     #Link relative to the build directory, not the container.
-    #ln -s ../../${OGRE_DIR_NAME} Ogre
-    #cd ..
+    ln -s ../../${OGRE_DIR_NAME} Ogre
+    cd ..
+
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 to solve some problems with bleeding edge compilers.
@@ -206,4 +208,8 @@ cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem
 git clone https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
-git clone https://github.com/Tencent/rapidjson.git ${INSTALL_DIR}/rapidjson
+#git clone https://github.com/Tencent/rapidjson.git ${INSTALL_DIR}/rapidjson
+
+#Copy in the rapidjson provided by ogre, not the latest cloned one.
+mkdir -p ${INSTALL_DIR}/rapidjson/include
+cp -r ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps/include/rapidjson ${INSTALL_DIR}/rapidjson/include
