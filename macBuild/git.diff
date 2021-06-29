@@ -1,0 +1,41 @@
+diff --git a/OgreMain/CMakeLists.txt b/OgreMain/CMakeLists.txt
+index 0424ebbc9f..eb11e5d357 100644
+--- a/OgreMain/CMakeLists.txt
++++ b/OgreMain/CMakeLists.txt
+@@ -423,7 +423,7 @@ if(OGRE_GCC_VERSION VERSION_EQUAL 4.8 OR OGRE_GCC_VERSION VERSION_GREATER 4.8)
+   if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+     list(APPEND LIBRARIES "-latomic_ops")
+   else()
+-    list(APPEND LIBRARIES "-latomic")
++    list(APPEND LIBRARIES "")
+   endif()
+ endif()
+
+diff --git a/OgreMain/src/OgrePlatformInformation.cpp b/OgreMain/src/OgrePlatformInformation.cpp
+index 7af3aafdde..9ae23015ea 100644
+--- a/OgreMain/src/OgrePlatformInformation.cpp
++++ b/OgreMain/src/OgrePlatformInformation.cpp
+@@ -61,6 +61,9 @@ THE SOFTWARE.
+     #endif
+ #endif
+
++#include <sys/types.h>
++#include <sys/sysctl.h>
++
+ #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32 || OGRE_PLATFORM == OGRE_PLATFORM_WINRT
+     #include "windows.h"
+ #endif
+
+diff --git a/Samples/2.0/CMakeLists.txt b/Samples/2.0/CMakeLists.txt
+index fab8894605..aa685c9c40 100644
+--- a/Samples/2.0/CMakeLists.txt
++++ b/Samples/2.0/CMakeLists.txt
+@@ -129,7 +129,7 @@ if( OGRE_BUILD_SAMPLES2 AND NOT OGRE_BUILD_SAMPLES2_SKIP )
+ 	add_subdirectory(ApiUsage/InstantRadiosity)
+ 	add_subdirectory(ApiUsage/LocalCubemaps)
+ 	add_subdirectory(ApiUsage/LocalCubemapsManualProbes)
+-	add_subdirectory(ApiUsage/MorphAnimations)
++	#add_subdirectory(ApiUsage/MorphAnimations)
+ 	add_subdirectory(ApiUsage/Refractions)
+ 	add_subdirectory(ApiUsage/V1Interfaces)
+ 	add_subdirectory(ApiUsage/V2Mesh)
