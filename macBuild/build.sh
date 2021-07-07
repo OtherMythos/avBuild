@@ -70,12 +70,9 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_CXX_STANDARD=11 ../..
-    # xcodebuild -scheme zziplib -project OGREDEPS.xcodeproj
-    # xcodebuild -scheme zlib -project OGREDEPS.xcodeproj
-    # xcodebuild -scheme FreeImage -project OGREDEPS.xcodeproj
-    # make -j${NUM_THREADS}
-    # make install
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
+    xcodebuild -scheme ALL_BUILD -project OGREDEPS.xcodeproj
+    xcodebuild -scheme install -project OGREDEPS.xcodeproj
 
     #Build Ogre
     cd ${OGRE_DIR}
@@ -106,7 +103,7 @@ if [ $BUILD_BULLET = true ]; then
     cd ${BULLET_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 \
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
         -DBUILD_BULLET_ROBOTICS_EXTRA=False -DBUILD_BULLET_ROBOTICS_GUI_EXTRA=False -DBUILD_BULLET2_DEMOS=False -DBUILD_CPU_DEMOS=False -DBUILD_OPENGL3_DEMOS=False -DBUILD_UNIT_TESTS=False -DBUILD_EXTRAS=False ../..
     xcodebuild -scheme ALL_BUILD -project BULLET_PHYSICS.xcodeproj
     xcodebuild -scheme install -project BULLET_PHYSICS.xcodeproj
@@ -148,7 +145,7 @@ fi
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
-    git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/edherbert/colibrigui.git ${COLIBRI_DIR}
+    git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
     cd ${COLIBRI_DIR}
 
     cd Dependencies
@@ -161,7 +158,22 @@ if [ $BUILD_COLIBRI = true ]; then
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 to solve some problems with bleeding edge compilers.
     cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    xcodebuild -scheme ALL_BUILD -project ColibriGui.xcodeproj
 
+    #Custom install for colibrigui, as the cmake install gave me problems.
+
+    INSTALL_BASE=${INSTALL_DIR}/colibri
+    rm -rf ${INSTALL_BASE}
+    mkdir ${INSTALL_BASE}
+    mkdir -p ${INSTALL_BASE}/include
+    cp -r ${COLIBRI_DIR}/include/ColibriGui ${INSTALL_BASE}/include/ColibriGui
+    cp -r ${COLIBRI_DIR}/bin/Data ${INSTALL_BASE}/data
+    #Have to specify these flags to prevent the symlink being copied.
+    #This is different from the gnu cp flags because macos uses bsd commands.
+    cp -RH ${COLIBRI_DIR}/Dependencies ${INSTALL_BASE}/dependencies
+    mkdir -p ${INSTALL_BASE}/lib64
+    cd ${COLIBRI_DIR}
+    find . -name "*.a" -type f -exec cp {} ${INSTALL_BASE}/lib64 \;
 else
     echo "Skipping colibri build"
 fi
@@ -212,8 +224,8 @@ fi
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
-    # make -j${NUM_THREADS} || exit 1
-    # make install
+    xcodebuild -scheme ALL_BUILD -project googletest-distribution.xcodeproj
+    xcodebuild -scheme install -project googletest-distribution.xcodeproj
 
 #Clone helper libs that don't directly need compiling.
 cd ${START_DIR}
