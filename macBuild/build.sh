@@ -82,6 +82,7 @@ if [ $BUILD_OGRE = true ]; then
     git apply /Users/edward/Documents/avBuild/macBuild/git.diff
     #This material breaks the samples when using metal.
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.materialll
+    mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.materiallll
 
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
