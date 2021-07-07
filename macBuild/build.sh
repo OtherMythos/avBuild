@@ -11,11 +11,11 @@ NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_OSX_ARCHITECTURES=x86_64 -G Xcode"
 #Build settings
-BUILD_OGRE=false
+BUILD_OGRE=true
 BUILD_BULLET=true
 BUILD_SQUIRREL=true
 BUILD_ENTITYX=true
-BUILD_COLIBRI=false
+BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
 
@@ -62,15 +62,15 @@ if [ $BUILD_OGRE = true ]; then
 
     #Clone
     git clone --branch ${OGRE_TARGET_BRANCH} https://github.com/OGRECave/ogre-next ${OGRE_DIR}
-    #cd ${OGRE_DIR}
-    #git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
+    cd ${OGRE_DIR}
+    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
 
     #Build dependencies first.
-    # cd ${OGRE_DEPS_DIR}
-    # mkdir -p build/${CMAKE_BUILD_TYPE}
-    # cd build/${CMAKE_BUILD_TYPE}
-    # #Force c++11 because freeimage seems broken in places.
-    # cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_CXX_STANDARD=11 ../..
+    cd ${OGRE_DEPS_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    #Force c++11 because freeimage seems broken in places.
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_CXX_STANDARD=11 ../..
     # xcodebuild -scheme zziplib -project OGREDEPS.xcodeproj
     # xcodebuild -scheme zlib -project OGREDEPS.xcodeproj
     # xcodebuild -scheme FreeImage -project OGREDEPS.xcodeproj
@@ -79,7 +79,7 @@ if [ $BUILD_OGRE = true ]; then
 
     #Build Ogre
     cd ${OGRE_DIR}
-    #ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
+    ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
     #Clear up some bugs in ogre.
     #git apply git.diff
     git apply /Users/edward/Documents/avBuild/macBuild/git.diff
@@ -93,6 +93,7 @@ if [ $BUILD_OGRE = true ]; then
     -DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
     xcodebuild -scheme ALL_BUILD -project OGRE.xcodeproj
+    xcodebuild -scheme install -project OGRE.xcodeproj
 else
     echo "Skipping ogre build"
 fi
@@ -160,8 +161,7 @@ if [ $BUILD_COLIBRI = true ]; then
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 to solve some problems with bleeding edge compilers.
     cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
-    make -j${NUM_THREADS} || exit 1
-    make install
+
 else
     echo "Skipping colibri build"
 fi
