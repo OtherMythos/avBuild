@@ -1,0 +1,259 @@
+#!/bin/bash -x
+
+# A work in progress script to build dependencies for ios.
+# This is an experimentation, it is unfinished and does not build properly.
+
+START_DIR="$1"
+if [ -v ${1} ]; then
+    echo "Please provide a build directory path."
+    exit 1
+fi
+
+CMAKE_BUILD_TYPE="Debug"
+BUILD_IOS=true
+
+CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -G Xcode"
+
+if [ $BUILD_IOS = true ]; then
+    echo "Building for ios"
+    CMAKE_BUILD_SETTINGS="${CMAKE_BUILD_SETTINGS} -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0"
+else
+    echo "Building for macos"
+    CMAKE_BUILD_SETTINGS="${CMAKE_BUILD_SETTINGS} -DCMAKE_OSX_ARCHITECTURES=x86_64"
+fi
+
+#Build settings
+BUILD_OGRE=false
+BUILD_BULLET=false
+BUILD_SQUIRREL=false
+BUILD_ENTITYX=false
+BUILD_COLIBRI=false
+BUILD_DETOUR=false
+BUILD_SDL2=false
+
+INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
+
+#Ogre
+OGRE_TARGET_BRANCH="v2-2"
+OGRE_DIR_NAME="ogre2"
+OGRE_DIR="${START_DIR}/${OGRE_DIR_NAME}"
+OGRE_BIN_DIR="${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}"
+OGRE_DEPS_DIR="${START_DIR}/ogre-next-deps"
+
+#Bullet
+BULLET_TARGET_BRANCH="master"
+BULLET_DIR="${START_DIR}/bullet3"
+
+#Squirrel
+SQUIRREL_TARGET_BRANCH="master"
+SQUIRREL_DIR="${START_DIR}/squirrel"
+
+#EntityX
+ENTITYX_TARGET_BRANCH="master"
+ENTITYX_DIR="${START_DIR}/entityx"
+
+#ColibriGUI
+COLIBRI_TARGET_BRANCH="master"
+COLIBRI_DIR="${START_DIR}/colibri"
+
+#RecastDetour
+DETOUR_TARGET_BRANCH="master"
+DETOUR_DIR="${START_DIR}/recastdetour"
+
+#SDL2
+SDL2_DIR="${START_DIR}/SDL2"
+
+GOOGLETEST_DIR="${START_DIR}/googletest"
+
+#Start
+cd ${START_DIR}
+
+#Ogre
+if [ $BUILD_OGRE = true ]; then
+    echo "Building ogre."
+
+    #Clone
+    git clone --branch ${OGRE_TARGET_BRANCH} https://github.com/OGRECave/ogre-next ${OGRE_DIR}
+    cd ${OGRE_DIR}
+    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
+
+    #Build dependencies first.
+    cd ${OGRE_DEPS_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    #Force c++11 because freeimage seems broken in places.
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DOGRE_UNITY_BUILD=1 -D OGRE_SIMD_NEON=0 -DOGRE_USE_BOOST=0 -D OGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DCMAKE_CXX_STANDARD=11 ../..
+    xcodebuild -scheme ALL_BUILD -project OGREDEPS.xcodeproj
+    xcodebuild -scheme install -project OGREDEPS.xcodeproj
+
+    #Build Ogre
+    cd ${OGRE_DIR}
+    ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps iOSDependencies
+    #Clear up some bugs in ogre.
+    #git apply git.diff
+    git apply /Users/edward/Documents/avBuild/macBuild/git.diff
+    #This material breaks the samples when using metal.
+    mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.materialll
+    mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.materiallll
+
+    mkdir -p ${OGRE_BIN_DIR}
+    cd ${OGRE_BIN_DIR}
+
+    #cmake ${CMAKE_BUILD_SETTINGS} \
+    #-DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
+    cmake -DCMAKE_BUILD_TYPE=Debug -G Xcode \
+    -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_SAMPLES2=False \
+    -DOGRE_BUILD_RENDERSYSTEM_METAL=1 -DOGRE_USE_BOOST=0 -DOGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DOGRE_UNITY_BUILD=0 -DOGRE_SIMD_NEON=0 -DOGRE_BUILD_TESTS=0 \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
+    exit 1
+    xcodebuild -scheme ALL_BUILD -project OGRE.xcodeproj
+    xcodebuild -scheme install -project OGRE.xcodeproj
+else
+    echo "Skipping ogre build"
+fi
+
+#Bullet
+if [ $BUILD_BULLET = true ]; then
+    echo "building bullet"
+
+    git clone --branch ${BULLET_TARGET_BRANCH} https://github.com/bulletphysics/bullet3.git ${BULLET_DIR}
+    cd ${BULLET_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
+        -DBUILD_BULLET_ROBOTICS_EXTRA=False -DBUILD_BULLET_ROBOTICS_GUI_EXTRA=False -DBUILD_BULLET2_DEMOS=False -DBUILD_CPU_DEMOS=False -DBUILD_OPENGL3_DEMOS=False -DBUILD_UNIT_TESTS=False -DBUILD_EXTRAS=False ../..
+    xcodebuild -scheme ALL_BUILD -project BULLET_PHYSICS.xcodeproj
+    xcodebuild -scheme install -project BULLET_PHYSICS.xcodeproj
+    # -destination generic/platform=ios
+else
+    echo "Skipping bullet build"
+fi
+
+#Squirrel
+if [ $BUILD_SQUIRREL = true ]; then
+    echo "building squirrel"
+
+    git clone --branch ${SQUIRREL_TARGET_BRANCH} https://github.com/albertodemichelis/squirrel.git ${SQUIRREL_DIR}
+    cd ${SQUIRREL_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DDISABLE_DYNAMIC=True -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel ../..
+
+    exit 1
+    xcodebuild -scheme ALL_BUILD -project squirrel.xcodeproj
+    xcodebuild -scheme install -project squirrel.xcodeproj
+else
+    echo "Skipping squirrel build"
+fi
+
+#EntityX
+if [ $BUILD_ENTITYX = true ]; then
+    echo "building entityX"
+
+    git clone --branch ${ENTITYX_TARGET_BRANCH} https://github.com/alecthomas/entityx.git ${ENTITYX_DIR}
+    cd ${ENTITYX_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_SHARED=False -DENTITYX_BUILD_TESTING=False -DENTITYX_RUN_BENCHMARKS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
+    xcodebuild -scheme ALL_BUILD -project EntityX.xcodeproj
+    xcodebuild -scheme install -project EntityX.xcodeproj
+else
+    echo "Skipping entityX build"
+fi
+
+#ColibriGUI
+if [ $BUILD_COLIBRI = true ]; then
+    echo "building ColibriGUI"
+
+    git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
+    cd ${COLIBRI_DIR}
+
+    cd Dependencies
+    rm Ogre
+    #Link relative to the build directory, not the container.
+    ln -s ../../${OGRE_DIR_NAME} Ogre
+    cd ..
+
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    #Force c++11 to solve some problems with bleeding edge compilers.
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    xcodebuild -scheme ALL_BUILD -project ColibriGui.xcodeproj
+
+    #Custom install for colibrigui, as the cmake install gave me problems.
+
+    INSTALL_BASE=${INSTALL_DIR}/colibri
+    rm -rf ${INSTALL_BASE}
+    mkdir ${INSTALL_BASE}
+    mkdir -p ${INSTALL_BASE}/include
+    cp -r ${COLIBRI_DIR}/include/ColibriGui ${INSTALL_BASE}/include/ColibriGui
+    cp -r ${COLIBRI_DIR}/bin/Data ${INSTALL_BASE}/data
+    #Have to specify these flags to prevent the symlink being copied.
+    #This is different from the gnu cp flags because macos uses bsd commands.
+    cp -RH ${COLIBRI_DIR}/Dependencies ${INSTALL_BASE}/dependencies
+    mkdir -p ${INSTALL_BASE}/lib64
+    cd ${COLIBRI_DIR}
+    find . -name "*.a" -type f -exec cp {} ${INSTALL_BASE}/lib64 \;
+else
+    echo "Skipping colibri build"
+fi
+
+#RecastDetour
+if [ $BUILD_DETOUR = true ]; then
+    echo "building RecastDetour"
+
+    git clone --branch ${DETOUR_TARGET_BRANCH} https://github.com/recastnavigation/recastnavigation.git ${DETOUR_DIR}
+    cd ${DETOUR_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
+    xcodebuild -scheme ALL_BUILD -project RecastNavigation.xcodeproj
+    xcodebuild -scheme install -project RecastNavigation.xcodeproj
+else
+    echo "Skipping RecastDetour build"
+fi
+
+#SDL2
+#Generally provided by the distro and dependencies as well, however it's convenient for the windows build.
+if [ $BUILD_SDL2 = true ]; then
+    echo "building SDL2"
+    cd $START_DIR
+
+    #They don't host a git repo so just get the source tarball.
+    SDL2_FILE_NAME="SDL2-2.0.14"
+    SDL2_FILE_NAME_TAR="${SDL2_FILE_NAME}.tar.gz"
+    if [ ! -f ${SDL2_FILE_NAME_TAR} ]; then
+        wget https://www.libsdl.org/release/${SDL2_FILE_NAME_TAR}
+    fi
+    tar -xf ${SDL2_FILE_NAME_TAR}
+    cd ${SDL2_FILE_NAME}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    xcodebuild -scheme ALL_BUILD -project SDL2.xcodeproj
+    xcodebuild -scheme install -project SDL2.xcodeproj
+else
+    echo "Skipping SDL2 build"
+fi
+
+#googletest
+    echo "building googletest"
+
+    git clone https://github.com/google/googletest.git ${GOOGLETEST_DIR}
+    cd ${GOOGLETEST_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
+    xcodebuild -scheme ALL_BUILD -project googletest-distribution.xcodeproj
+    xcodebuild -scheme install -project googletest-distribution.xcodeproj
+
+#Clone helper libs that don't directly need compiling.
+cd ${START_DIR}
+git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem
+git clone https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
+git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
+#git clone https://github.com/Tencent/rapidjson.git ${INSTALL_DIR}/rapidjson
+
+#Copy in the rapidjson provided by ogre, not the latest cloned one.
+mkdir -p ${INSTALL_DIR}/rapidjson/include
+cp -r ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps/include/rapidjson ${INSTALL_DIR}/rapidjson/include
