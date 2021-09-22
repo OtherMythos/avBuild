@@ -105,9 +105,19 @@ if [ $BUILD_OGRE = true ]; then
     -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_SAMPLES2=False \
     -DOGRE_BUILD_RENDERSYSTEM_METAL=1 -DOGRE_USE_BOOST=0 -DOGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DOGRE_UNITY_BUILD=0 -DOGRE_SIMD_NEON=0 -DOGRE_BUILD_TESTS=0 \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
-    exit 1
+
     xcodebuild -scheme ALL_BUILD -project OGRE.xcodeproj
-    xcodebuild -scheme install -project OGRE.xcodeproj
+
+    #Sooo it seems install is broken when building for ios.
+    #So I work around it with this. Slightly hacky unfortunately.
+    rm -rf ${INSTALL_DIR}/ogre2
+    mkdir ${INSTALL_DIR}/ogre2
+    cp -r ${OGRE_DIR}/Samples/Media ${INSTALL_DIR}/ogre2/Media
+    mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE
+    cp -r ${OGRE_DIR}/OgreMain/include/* ${INSTALL_DIR}/ogre2/include/OGRE
+    cp ${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}/include/* ${INSTALL_DIR}/ogre2/include/OGRE
+    mkdir -p ${INSTALL_DIR}/ogre2/lib/${CMAKE_BUILD_TYPE}
+    find ${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}/lib/iphoneos -name "*.a" -type f -exec cp {} ${INSTALL_DIR}/ogre2/lib/${CMAKE_BUILD_TYPE} \;
 else
     echo "Skipping ogre build"
 fi
