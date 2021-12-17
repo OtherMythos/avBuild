@@ -62,6 +62,7 @@ DETOUR_TARGET_BRANCH="master"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2
+SDL2_TARGET_BRANCH="release-2.0.14"
 SDL2_DIR="${START_DIR}/SDL2"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
@@ -214,14 +215,8 @@ if [ $BUILD_SDL2 = true ]; then
     echo "building SDL2"
     cd $START_DIR
 
-    #They don't host a git repo so just get the source tarball.
-    SDL2_FILE_NAME="SDL2-2.0.14"
-    SDL2_FILE_NAME_TAR="${SDL2_FILE_NAME}.tar.gz"
-    if [ ! -f ${SDL2_FILE_NAME_TAR} ]; then
-        wget https://www.libsdl.org/release/${SDL2_FILE_NAME_TAR}
-    fi
-    tar -xf ${SDL2_FILE_NAME_TAR}
-    cd ${SDL2_FILE_NAME}
+    git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
+    cd ${SDL2_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
