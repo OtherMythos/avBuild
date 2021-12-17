@@ -1,15 +1,28 @@
-#!/bin/bash -x
+#!/bin/bash
 
-START_DIR="$1"
-if [ -v ${1} ]; then
+#brew install cmake wget
+
+START_DIR="${1}"
+if [ -z "$1" ]; then
     echo "Please provide a build directory path."
     exit 1
+fi
+
+echo "Building to path ${START_DIR}"
+
+#Fill with either 'x86' or 'arm64' to override the platform detection.
+TARGET_ARCH=""
+if [ -z ${TARGET_ARCH} ]; then
+    TARGET_ARCH=$(arch)
+    echo "Assuming architecture to be ${TARGET_ARCH}"
+else
+    echo "Using architecture ${TARGET_ARCH}"
 fi
 
 #Variables
 NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
-CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_OSX_ARCHITECTURES=x86_64 -G Xcode"
+CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_OSX_ARCHITECTURES=${TARGET_ARCH} -G Xcode"
 #Build settings
 BUILD_OGRE=true
 BUILD_BULLET=true
@@ -146,7 +159,8 @@ fi
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
-    git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
+
     cd ${COLIBRI_DIR}
 
     cd Dependencies
