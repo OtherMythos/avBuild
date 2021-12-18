@@ -10,10 +10,14 @@ fi
 
 echo "Building to path ${START_DIR}"
 
-#Fill with either 'x86' or 'arm64' to override the platform detection.
+#Fill with either 'x86_64' or 'arm64' to override the platform detection.
 TARGET_ARCH=""
 if [ -z ${TARGET_ARCH} ]; then
     TARGET_ARCH=$(arch)
+    #For historical reasons arch might return this on x86 processors.
+    if [ ${TARGET_ARCH} == "i386" ]; then
+        TARGET_ARCH="x86_64"
+    fi
     echo "Assuming architecture to be ${TARGET_ARCH}"
 else
     echo "Using architecture ${TARGET_ARCH}"
