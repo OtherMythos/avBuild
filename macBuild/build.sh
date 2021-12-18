@@ -91,9 +91,13 @@ if [ $BUILD_OGRE = true ]; then
     #Build Ogre
     cd ${OGRE_DIR}
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
-    #Clear up some bugs in ogre.
-    #git apply git.diff
-    git apply /Users/edward/Documents/avBuild/macBuild/git.diff
+
+    if [ ${TARGET_ARCH} == "arm64" ]; then
+        #Do this for apple silicone. Seems it's not officially supported on 2.2 but can be enabled with this.
+        sed -i -e 's/#   define OGRE_CPU OGRE_CPU_X86/#   define OGRE_CPU OGRE_CPU_ARM/g' OgreMain/include/OgrePlatformInformation.h
+    fi
+
+    #git apply /Users/edward/Documents/avBuild/macBuild/git.diff
     #This material breaks the samples when using metal.
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.materialll
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.materiallll
@@ -242,7 +246,6 @@ cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem
 git clone https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
-#git clone https://github.com/Tencent/rapidjson.git ${INSTALL_DIR}/rapidjson
 
 #Copy in the rapidjson provided by ogre, not the latest cloned one.
 mkdir -p ${INSTALL_DIR}/rapidjson/include
