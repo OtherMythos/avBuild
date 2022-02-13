@@ -49,6 +49,7 @@ DETOUR_TARGET_BRANCH="master"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2
+SDL2_TARGET_BRANCH="release-2.0.14"
 SDL2_DIR="${START_DIR}/SDL2"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
@@ -135,7 +136,8 @@ fi
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
-    git clone --branch ${COLIBRI_TARGET_BRANCH} https://github.com/edherbert/colibrigui.git ${COLIBRI_DIR}
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
+
     cd ${COLIBRI_DIR}
 
     cd Dependencies
@@ -149,7 +151,18 @@ if [ $BUILD_COLIBRI = true ]; then
     #Force c++11 to solve some problems with bleeding edge compilers.
     cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     make -j${NUM_THREADS} || exit 1
-    make install
+
+    INSTALL_BASE=${INSTALL_DIR}/colibri
+    rm -rf ${INSTALL_BASE}
+    mkdir ${INSTALL_BASE}
+    mkdir -p ${INSTALL_BASE}/include
+    cp -r ${COLIBRI_DIR}/include/ColibriGui ${INSTALL_BASE}/include/ColibriGui
+    cp -r ${COLIBRI_DIR}/bin/Data ${INSTALL_BASE}/data
+    cp -RH ${COLIBRI_DIR}/Dependencies ${INSTALL_BASE}/dependencies
+    mkdir -p ${INSTALL_BASE}/lib64
+    cd ${COLIBRI_DIR}
+    find . -name "*.a" -type f -exec cp {} ${INSTALL_BASE}/lib64 \;
+
 else
     echo "Skipping colibri build"
 fi
@@ -173,16 +186,9 @@ fi
 #Generally provided by the distro and dependencies as well, however it's convenient for the windows build.
 if [ $BUILD_SDL2 = true ]; then
     echo "building SDL2"
-    cd $START_DIR
 
-    #They don't host a git repo so just get the source tarball.
-    SDL2_FILE_NAME="SDL2-2.0.14"
-    SDL2_FILE_NAME_TAR="${SDL2_FILE_NAME}.tar.gz"
-    if [ ! -f ${SDL2_FILE_NAME_TAR} ]; then
-        wget https://www.libsdl.org/release/${SDL2_FILE_NAME_TAR}
-    fi
-    tar -xf ${SDL2_FILE_NAME_TAR}
-    cd ${SDL2_FILE_NAME}
+    git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
+    cd ${SDL2_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
