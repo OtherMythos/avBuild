@@ -83,12 +83,14 @@ if [ $BUILD_OGRE = true ]; then
     cd ${OGRE_DIR}
     git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
 
+    STATIC_FLAGS=""
+    #STATIC_FLAGS="-DOGRE_STATIC=TRUE -DOGRE_BUILD_LIBS_AS_FRAMEWORKS=FALSE"
     #Build dependencies first.
     cd ${OGRE_DEPS_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
+    cmake ${CMAKE_BUILD_SETTINGS} ${STATIC_FLAGS} -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
     xcodebuild -scheme ALL_BUILD -project OGREDEPS.xcodeproj
     xcodebuild -scheme install -project OGREDEPS.xcodeproj
 
@@ -111,6 +113,7 @@ if [ $BUILD_OGRE = true ]; then
 
     cmake ${CMAKE_BUILD_SETTINGS} \
     -DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
+    ${STATIC_FLAGS} \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
     xcodebuild -scheme ALL_BUILD -project OGRE.xcodeproj
     xcodebuild -scheme install -project OGRE.xcodeproj
