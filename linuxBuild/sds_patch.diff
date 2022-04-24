@@ -1,0 +1,12 @@
+diff --git a/include/sds/sds_fstream.h b/include/sds/sds_fstream.h
+index c212f2f..43b2479 100644
+--- a/include/sds/sds_fstream.h
++++ b/include/sds/sds_fstream.h
+@@ -6,6 +6,7 @@
+ #include <stdint.h>
+ #include <algorithm>
+ #include <string>
++#include <cstddef>
+ 
+ namespace sds
+ {

@@ -6,6 +6,8 @@ if [ -v ${1} ]; then
     exit 1
 fi
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 #Variables
 NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
@@ -145,6 +147,12 @@ if [ $BUILD_COLIBRI = true ]; then
     #Link relative to the build directory, not the container.
     ln -s ../../${OGRE_DIR_NAME} Ogre
     cd ..
+
+    #Workaround for an issue in the sds dependency build noticed on arch linux.
+    #There's probably a compiler flag fix for this but I don't know it :)
+    cd Dependencies/sds_library
+    git apply ${SCRIPT_DIR}/sds_patch.diff
+    cd ${COLIBRI_DIR}
 
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
