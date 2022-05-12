@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b9b9eb620..2d0b21f7b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1668,7 +1668,7 @@ elseif(APPLE)
+     message_error("SDL_FILE must be enabled to build on MacOS X")
+   endif()
+ 
+-  file(GLOB MISC_SOURCES ${SDL2_SOURCE_DIR}/src/misc/macosx/*.m)
++  file(GLOB MISC_SOURCES ${SDL2_SOURCE_DIR}/src/misc/ios/*.m)
+   set(SOURCE_FILES ${SOURCE_FILES} ${MISC_SOURCES})
+   set(HAVE_SDL_MISC TRUE)
+ 
