@@ -1,8 +1,5 @@
 #!/bin/bash -x
 
-# A work in progress script to build dependencies for ios.
-# This is an experimentation, it is unfinished and does not build properly.
-
 START_DIR="$1"
 if [ -v ${1} ]; then
     echo "Please provide a build directory path."
@@ -23,13 +20,13 @@ else
 fi
 
 #Build settings
-BUILD_OGRE=false
-BUILD_BULLET=false
-BUILD_SQUIRREL=false
-BUILD_ENTITYX=false
+BUILD_OGRE=true
+BUILD_BULLET=true
+BUILD_SQUIRREL=true
+BUILD_ENTITYX=true
 BUILD_COLIBRI=true
-BUILD_DETOUR=false
-BUILD_SDL2=false
+BUILD_DETOUR=true
+BUILD_SDL2=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -113,12 +110,23 @@ if [ $BUILD_OGRE = true ]; then
     #So I work around it with this. Slightly hacky unfortunately.
     rm -rf ${INSTALL_DIR}/ogre2
     mkdir ${INSTALL_DIR}/ogre2
-    cp -r ${OGRE_DIR}/Samples/Media ${INSTALL_DIR}/ogre2/Media
+    cp -r ${OGRE_DIR}/Samples/Media ${INSTALL_DIR}/ogre2
     mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE
     cp -r ${OGRE_DIR}/OgreMain/include/* ${INSTALL_DIR}/ogre2/include/OGRE
     cp ${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}/include/* ${INSTALL_DIR}/ogre2/include/OGRE
     mkdir -p ${INSTALL_DIR}/ogre2/lib/${CMAKE_BUILD_TYPE}
     find ${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}/lib/iphoneos -name "*.a" -type f -exec cp {} ${INSTALL_DIR}/ogre2/lib/${CMAKE_BUILD_TYPE} \;
+
+    mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE/Hlms/Pbs
+    mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE/Hlms/Common
+    mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE/Hlms/Unlit
+    cp -r ${OGRE_DIR}/Components/Hlms/Common/include/* ${INSTALL_DIR}/ogre2/include/OGRE/Hlms/Common
+    cp -r ${OGRE_DIR}/Components/Hlms/Pbs/include/* ${INSTALL_DIR}/ogre2/include/OGRE/Hlms/Pbs
+    cp -r ${OGRE_DIR}/Components/Hlms/Unlit/include/* ${INSTALL_DIR}/ogre2/include/OGRE/Hlms/Unlit
+    mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE/RenderSystems/Metal
+    cp -r ${OGRE_DIR}/RenderSystems/Metal/include/* ${INSTALL_DIR}/ogre2/include/OGRE/RenderSystems/Metal
+    mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE/Plugins/ParticleFX
+    cp -r ${OGRE_DIR}/PlugIns/ParticleFX/include/* ${INSTALL_DIR}/ogre2/include/OGRE/Plugins/ParticleFX
 else
     echo "Skipping ogre build"
 fi
