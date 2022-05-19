@@ -1,0 +1,13 @@
+diff --git a/src/sds/sds_fstreamApk.cpp b/src/sds/sds_fstreamApk.cpp
+index 9816c83..ec1606a 100644
+--- a/src/sds/sds_fstreamApk.cpp
++++ b/src/sds/sds_fstreamApk.cpp
+@@ -106,7 +106,7 @@ namespace sds
+ 		if( !isBundle() )
+ 			return fstream::read( outData, sizeBytes );
+ 
+-		const size_t bytesToRead = std::min( sizeBytes, m_apkSize - m_currentOffset );
++		const size_t bytesToRead = std::min( (unsigned long long)sizeBytes, (unsigned long long)(m_apkSize - m_currentOffset) );
+ 		memcpy( outData, m_apkBuffer + m_currentOffset, bytesToRead );
+ 		m_currentOffset += bytesToRead;
+ 
