@@ -1,0 +1,13 @@
+diff --git a/src/FreeImage/Source/LibPNG/pngpriv.h b/src/FreeImage/Source/LibPNG/pngpriv.h
+index 3581f67..9335e88 100644
+--- a/src/FreeImage/Source/LibPNG/pngpriv.h
++++ b/src/FreeImage/Source/LibPNG/pngpriv.h
+@@ -135,7 +135,7 @@
+ #  endif
+ #endif
+ 
+-#if PNG_ARM_NEON_OPT > 0
++#if FALSE
+    /* NEON optimizations are to be at least considered by libpng, so enable the
+     * callbacks to do this.
+     */

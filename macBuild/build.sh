@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 #brew install cmake wget
 
@@ -7,6 +7,8 @@ if [ -z "$1" ]; then
     echo "Please provide a build directory path."
     exit 1
 fi
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 echo "Building to path ${START_DIR}"
 
@@ -39,7 +41,7 @@ BUILD_SDL2=true
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
 #Ogre
-OGRE_TARGET_BRANCH="v2-2"
+OGRE_TARGET_BRANCH="v2-3"
 OGRE_DIR_NAME="ogre2"
 OGRE_DIR="${START_DIR}/${OGRE_DIR_NAME}"
 OGRE_BIN_DIR="${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}"
@@ -87,6 +89,8 @@ if [ $BUILD_OGRE = true ]; then
     #STATIC_FLAGS="-DOGRE_STATIC=TRUE -DOGRE_BUILD_LIBS_AS_FRAMEWORKS=FALSE"
     #Build dependencies first.
     cd ${OGRE_DEPS_DIR}
+    #Bodge for macos arm which seems to be broken with the most recent freeimage stuff.
+    git apply ${SCRIPT_DIR}/macosNeonOptimisation.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
@@ -97,16 +101,6 @@ if [ $BUILD_OGRE = true ]; then
     #Build Ogre
     cd ${OGRE_DIR}
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
-
-    if [ ${TARGET_ARCH} == "arm64" ]; then
-        #Do this for apple silicone. Seems it's not officially supported on 2.2 but can be enabled with this.
-        sed -i -e 's/#   define OGRE_CPU OGRE_CPU_X86/#   define OGRE_CPU OGRE_CPU_ARM/g' OgreMain/include/OgrePlatformInformation.h
-    fi
-
-    #git apply /Users/edward/Documents/avBuild/macBuild/git.diff
-    #This material breaks the samples when using metal.
-    mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.materialll
-    mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.materiallll
 
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
