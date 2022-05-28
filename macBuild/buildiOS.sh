@@ -240,7 +240,6 @@ if [ $BUILD_SDL2 = true ]; then
 
     git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
     cd ${SDL2_DIR}
-    #sed -i -e '' 's:macosx/*.m:ios/*.m' CMakeLists.txt
     git apply /Users/edward/Documents/avBuild/macBuild/iosDiff.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
@@ -248,6 +247,8 @@ if [ $BUILD_SDL2 = true ]; then
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
     xcodebuild -scheme ALL_BUILD -project SDL2.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project SDL2.xcodeproj -destination generic/platform=iOS
+    #cp -r ${SDL2_DIR}/src/main/ ${INSTALL_DIR}/SDL2/main/
+    cp -r ${SDL2_DIR}/src/ ${INSTALL_DIR}/SDL2/src
 else
     echo "Skipping SDL2 build"
 fi
