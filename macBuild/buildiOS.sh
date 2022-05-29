@@ -127,6 +127,8 @@ if [ $BUILD_OGRE = true ]; then
     cp -r ${OGRE_DIR}/RenderSystems/Metal/include/* ${INSTALL_DIR}/ogre2/include/OGRE/RenderSystems/Metal
     mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE/Plugins/ParticleFX
     cp -r ${OGRE_DIR}/PlugIns/ParticleFX/include/* ${INSTALL_DIR}/ogre2/include/OGRE/Plugins/ParticleFX
+
+    cp -r ${OGRE_DIR}/iOSDependencies/ ${INSTALL_DIR}/ogre2/iOSDependencies
 else
     echo "Skipping ogre build"
 fi
