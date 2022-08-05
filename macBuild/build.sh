@@ -37,6 +37,7 @@ BUILD_ENTITYX=true
 BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
+BUILD_OPENALSOFT=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -70,6 +71,10 @@ DETOUR_DIR="${START_DIR}/recastdetour"
 #SDL2
 SDL2_TARGET_BRANCH="release-2.0.14"
 SDL2_DIR="${START_DIR}/SDL2"
+
+#OpenALSoft
+OPENALSOFT_TARGET_BRANCH="master"
+OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -218,7 +223,6 @@ fi
 #Generally provided by the distro and dependencies as well, however it's convenient for the windows build.
 if [ $BUILD_SDL2 = true ]; then
     echo "building SDL2"
-    cd $START_DIR
 
     git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
     cd ${SDL2_DIR}
@@ -229,6 +233,22 @@ if [ $BUILD_SDL2 = true ]; then
     xcodebuild -scheme install -project SDL2.xcodeproj
 else
     echo "Skipping SDL2 build"
+fi
+
+#OpenALSoft
+if [ $BUILD_OPENALSOFT = true ]; then
+    echo "building OpenALSoft"
+
+    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
+    cd ${OPENALSOFT_DIR}
+    git checkout dc83d99c95a42c960150ddeee06c124134b52208
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC ../..
+    xcodebuild -scheme ALL_BUILD -project OpenAL.xcodeproj
+    xcodebuild -scheme install -project OpenAL.xcodeproj
+else
+    echo "Skipping OpenALSoft build"
 fi
 
 #googletest
