@@ -38,6 +38,7 @@ BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
 BUILD_OPENALSOFT=true
+BUILD_NFD=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -75,6 +76,10 @@ SDL2_DIR="${START_DIR}/SDL2"
 #OpenALSoft
 OPENALSOFT_TARGET_BRANCH="master"
 OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
+
+#nativefiledialog
+NFD_TARGET_BRANCH="master"
+NFD_DIR="${START_DIR}/nativefiledialog"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -249,6 +254,21 @@ if [ $BUILD_OPENALSOFT = true ]; then
     xcodebuild -scheme install -project OpenAL.xcodeproj
 else
     echo "Skipping OpenALSoft build"
+fi
+
+#nativefiledialog
+if [ $BUILD_NFD = true ]; then
+    echo "building nativefiledialog"
+
+    git clone --branch ${NFD_TARGET_BRANCH} https://github.com/btzy/nativefiledialog-extended.git ${NFD_DIR}
+    cd ${NFD_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
+    xcodebuild -scheme ALL_BUILD -project nativefiledialog-extended.xcodeproj
+    xcodebuild -scheme install -project nativefiledialog-extended.xcodeproj
+else
+    echo "Skipping nativefiledialog build"
 fi
 
 #googletest
