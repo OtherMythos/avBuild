@@ -11,12 +11,15 @@ SET "CMAKE_BUILD_TYPE=Debug"
 SET "CMAKE_BUILD_SETTINGS=-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 :: Build settings
 SET BUILD_OGRE=true
-SET BUILD_BULLET=true
-SET BUILD_SQUIRREL=true
-SET BUILD_ENTITYX=true
-SET BUILD_COLIBRI=true
-SET BUILD_DETOUR=true
-SET BUILD_GOOGLETEST=true
+SET BUILD_BULLET=false
+SET BUILD_SQUIRREL=false
+SET BUILD_ENTITYX=false
+SET BUILD_COLIBRI=false
+SET BUILD_DETOUR=false
+SET BUILD_SDL2=false
+SET BUILD_OPENALSOFT=false
+SET BUILD_NFD=false
+SET BUILD_GOOGLETEST=false
 
 SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
 
@@ -47,7 +50,19 @@ SET "COLIBRI_DIR=%START_DIR%\colibri"
 SET "DETOUR_TARGET_BRANCH=master"
 SET "DETOUR_DIR=%START_DIR%\recastdetour"
 
-SET "GOOGLETEST_DIR=%START_DIR%\googletest"
+::SDL2
+SET SDL2_TARGET_BRANCH="release-2.0.14"
+SET SDL2_DIR="%START_DIR%/SDL2"
+
+::OpenALSoft
+SET OPENALSOFT_TARGET_BRANCH="master"
+SET OPENALSOFT_DIR="%START_DIR%/OpenALSoft"
+
+::nativefiledialog
+SET NFD_TARGET_BRANCH="master"
+SET NFD_DIR="%START_DIR%/nativefiledialog"
+
+SET GOOGLETEST_DIR="%START_DIR%/googletest"
 
 ::Start
 cd %START_DIR%
@@ -72,7 +87,6 @@ IF %BUILD_OGRE% equ true (
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::Bullet
@@ -119,7 +133,7 @@ IF %BUILD_ENTITYX% equ true (
 ::Colibri
 IF %BUILD_COLIBRI% equ true (
     echo "building ColibriGUI"
-    git clone --branch %COLIBRI_TARGET_BRANCH% https://github.com/edherbert/colibrigui.git %COLIBRI_DIR%
+    git clone --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
     cd %COLIBRI_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
@@ -144,6 +158,30 @@ IF %BUILD_DETOUR% equ true (
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
+::OpenALSoft
+IF %BUILD_OPENALSOFT% equ true (
+    echo "building OpenALSoft"
+
+    git clone --branch %OPENALSOFT_TARGET_BRANCH% https://github.com/kcat/openal-soft.git %OPENALSOFT_DIR%
+    cd %OPENALSOFT_DIR%
+    git checkout dc83d99c95a42c960150ddeee06c124134b52208
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/OpenALSoft -DLIBTYPE=STATIC ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+)
+
+::nativefiledialog
+IF %BUILD_NFD% equ true (
+    echo "building nativefiledialog"
+
+    git clone --branch %NFD_TARGET_BRANCH% https://github.com/btzy/nativefiledialog-extended.git %NFD_DIR%
+    cd %NFD_DIR%
+    mkdir "build/%CMAKE_BUILD_TYPE%"
+    cd "build/%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/nativefiledialog ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+)
 
 ::googletest
 IF %BUILD_GOOGLETEST% equ true (
@@ -170,7 +208,10 @@ ren SDL2-2.0.14 SDL2
 git clone https://github.com/wjakob/filesystem.git %INSTALL_DIR%\filesystem
 git clone https://github.com/gabime/spdlog.git %INSTALL_DIR%\spdlog
 git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
-git clone https://github.com/Tencent/rapidjson.git %INSTALL_DIR%\rapidjson
+
+::Copy in the rapidjson provided by ogre, not the latest cloned one.
+mkdir %INSTALL_DIR%/rapidjson/include
+robocopy %OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps/include/rapidjson %INSTALL_DIR%/rapidjson/include
 
 
 exit 1
