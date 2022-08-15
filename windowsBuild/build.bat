@@ -11,15 +11,15 @@ SET "CMAKE_BUILD_TYPE=Debug"
 SET "CMAKE_BUILD_SETTINGS=-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 :: Build settings
 SET BUILD_OGRE=true
-SET BUILD_BULLET=false
-SET BUILD_SQUIRREL=false
-SET BUILD_ENTITYX=false
-SET BUILD_COLIBRI=false
-SET BUILD_DETOUR=false
-SET BUILD_SDL2=false
-SET BUILD_OPENALSOFT=false
-SET BUILD_NFD=false
-SET BUILD_GOOGLETEST=false
+SET BUILD_BULLET=true
+SET BUILD_SQUIRREL=true
+SET BUILD_ENTITYX=true
+SET BUILD_COLIBRI=true
+SET BUILD_DETOUR=true
+SET BUILD_SDL2=true
+SET BUILD_OPENALSOFT=true
+SET BUILD_NFD=true
+SET BUILD_GOOGLETEST=true
 
 SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
 
@@ -136,7 +136,7 @@ IF %BUILD_ENTITYX% equ true (
 ::Colibri
 IF %BUILD_COLIBRI% equ true (
     echo "building ColibriGUI"
-    git clone --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
+    git clone --recurse-submodules --shallow-submodules --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
     cd %COLIBRI_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
@@ -146,7 +146,16 @@ IF %BUILD_COLIBRI% equ true (
     move "Dependencies\Ogre\Dependencies\include\include" "Dependencies\Ogre\Dependencies\include\rapidjson"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\colibri ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ALL_BUILD.vcxproj
+
+    rmdir /S /Q "%INSTALL_DIR%/colibri"
+    mkdir "%INSTALL_DIR%/colibri"
+    mkdir "%INSTALL_DIR%/colibri/include"
+    robocopy "%COLIBRI_DIR%/include/ColibriGui" "%INSTALL_DIR%/colibri/include/ColibriGui" /E
+    robocopy "%COLIBRI_DIR%/bin/Data" "%INSTALL_DIR%/colibri/data" /E
+    robocopy "%COLIBRI_DIR%/Dependencies" "%INSTALL_DIR%/colibri/dependencies" /E
+    mkdir "%INSTALL_DIR%/colibri/lib64"
+    for /R %COLIBRI_DIR% %%f in (*.lib) do copy %%f "%INSTALL_DIR%/colibri/lib64"
 )
 
 ::RecastDetour
