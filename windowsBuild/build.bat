@@ -76,17 +76,20 @@ IF %BUILD_OGRE% equ true (
 
     ::Build dependencies first.
     cd %OGRE_DEPS_DIR%
-    mkdir "build\%CMAKE_BUILD_TYPE%"
-    cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_CXX_STANDARD=11 ../..
+    mkdir "build\Debug"
+    cd "build\Debug"
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 ../..
     ::This performs both the build and install.
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    ::Build both debug and release as this solves some Ogre find vulkan issues.
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj /p:Configuration=Debug
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj /p:Configuration=Release
 
     ::Build Ogre
     cd %OGRE_DIR%
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
 ::Bullet
