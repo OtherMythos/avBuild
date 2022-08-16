@@ -222,8 +222,8 @@ git clone https://github.com/gabime/spdlog.git %INSTALL_DIR%\spdlog
 git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
 
 ::Copy in the rapidjson provided by ogre, not the latest cloned one.
-mkdir %INSTALL_DIR%/rapidjson/include
-robocopy %OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps/include/rapidjson %INSTALL_DIR%/rapidjson/include
+mkdir %INSTALL_DIR%/rapidjson/include/rapidjson
+robocopy %OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps/include/rapidjson %INSTALL_DIR%/rapidjson/include/rapidjson /E
 
 
 exit 1
