@@ -155,7 +155,9 @@ IF %BUILD_COLIBRI% equ true (
     robocopy "%COLIBRI_DIR%/bin/Data" "%INSTALL_DIR%/colibri/data" /E
     robocopy "%COLIBRI_DIR%/Dependencies" "%INSTALL_DIR%/colibri/dependencies" /E
     mkdir "%INSTALL_DIR%/colibri/lib64"
+    mkdir "%INSTALL_DIR%/colibri/bin"
     for /R %COLIBRI_DIR% %%f in (*.lib) do copy %%f "%INSTALL_DIR%/colibri/lib64"
+    for /R %COLIBRI_DIR% %%f in (*.dll) do copy %%f "%INSTALL_DIR%/colibri/bin"
 )
 
 ::RecastDetour
