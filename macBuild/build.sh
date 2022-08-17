@@ -76,6 +76,8 @@ SDL2_DIR="${START_DIR}/SDL2"
 #OpenALSoft
 OPENALSOFT_TARGET_BRANCH="master"
 OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
+LIBSNDFILE_TARGET_BRANCH="ea3ac90e98c6a98cd52cae39010446fba368a2e3"
+LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 
 #nativefiledialog
 NFD_TARGET_BRANCH="master"
@@ -252,6 +254,16 @@ if [ $BUILD_OPENALSOFT = true ]; then
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC ../..
     xcodebuild -scheme ALL_BUILD -project OpenAL.xcodeproj
     xcodebuild -scheme install -project OpenAL.xcodeproj
+
+    #libsndfile which is a dependency for audio.
+    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
+    cd ${LIBSNDFILE_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_EXTERNAL_LIBS=False ../..
+    xcodebuild -scheme ALL_BUILD -project libsndfile.xcodeproj
+    xcodebuild -scheme install -project libsndfile.xcodeproj
+    exit 1
 else
     echo "Skipping OpenALSoft build"
 fi
@@ -287,6 +299,8 @@ cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem
 git clone https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
+git clone https://github.com/ocornut/imgui.git ${INSTALL_DIR}/imgui
+git clone https://github.com/edherbert/ogre-next-imgui.git ${INSTALL_DIR}/ogre-next-imgui
 
 #Copy in the rapidjson provided by ogre, not the latest cloned one.
 mkdir -p ${INSTALL_DIR}/rapidjson/include
