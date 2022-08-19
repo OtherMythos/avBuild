@@ -8,20 +8,20 @@ fi
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-NDK_LOCATION="/Users/edward/Library/Android/sdk/ndk/24.0.8215888/"
+NDK_LOCATION="/avbuild/android-ndk-r25"
 
 #Variables
 NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE='${NDK_LOCATION}/build/cmake/android.toolchain.cmake'"
 #Build settings
-BUILD_OGRE=false
+BUILD_OGRE=true
 BUILD_BULLET=false
 BUILD_SQUIRREL=false
 BUILD_ENTITYX=false
 BUILD_COLIBRI=false
 BUILD_DETOUR=false
-BUILD_SDL2=true
+BUILD_SDL2=false
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -53,7 +53,8 @@ DETOUR_TARGET_BRANCH="master"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2
-SDL2_TARGET_BRANCH="release-2.0.14"
+#SDL2_TARGET_BRANCH="release-2.0.22"
+SDL2_TARGET_BRANCH="main"
 SDL2_DIR="${START_DIR}/SDL2"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
@@ -70,6 +71,9 @@ if [ $BUILD_OGRE = true ]; then
     #cd ${OGRE_DIR}
     git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
 
+    cd ${OGRE_DIR}
+    git apply ${SCRIPT_DIR}/ogreFix.diff
+
     #Build dependencies first.
     cd ${OGRE_DEPS_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
@@ -79,7 +83,7 @@ if [ $BUILD_OGRE = true ]; then
         -DANDROID_ABI=arm64-v8a \
         -DANDROID_NATIVE_API_LEVEL=24 \
         ../..
-    make -j${NUM_THREADS}
+    make -j${NUM_THREADS} || exit 1
     make install
 
     #Build Ogre
@@ -226,7 +230,7 @@ if [ $BUILD_SDL2 = true ]; then
     cd ${SDL2_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DANDROID_PLATFORM=33 -DSDL_HID=FALSE -DSDL_HAPTIC=FALSE -DSDL_FILESYSTEM=FALSE -DSDL_AUDIO=FALSE -DSDL_MISC=FALSE -DSDL_SHARED=FALSE ../..
     make -j${NUM_THREADS} || exit 1
     make install
 

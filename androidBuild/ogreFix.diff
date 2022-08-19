@@ -1,0 +1,50 @@
+diff --git a/OgreMain/include/Math/Array/C/OgreArrayVector3.inl b/OgreMain/include/Math/Array/C/OgreArrayVector3.inl
+index 6a9d176c06..7714fe9aef 100644
+--- a/OgreMain/include/Math/Array/C/OgreArrayVector3.inl
++++ b/OgreMain/include/Math/Array/C/OgreArrayVector3.inl
+@@ -375,7 +375,7 @@ namespace Ogre
+     //-----------------------------------------------------------------------------------
+     inline int ArrayVector3::isNaN( void ) const
+     {
+-        return Math::isNaN( mChunkBase[0] ) | Math::isNaN( mChunkBase[1] ) | Math::isNaN( mChunkBase[2] );
++        return Math::isNaN( mChunkBase[0] ) || Math::isNaN( mChunkBase[1] ) || Math::isNaN( mChunkBase[2] );
+     }
+     //-----------------------------------------------------------------------------------
+     inline ArrayVector3 ArrayVector3::primaryAxis( void ) const
+diff --git a/OgreMain/include/Math/Simple/C/OgreAabb.inl b/OgreMain/include/Math/Simple/C/OgreAabb.inl
+index 290bb6b000..6e79fa2834 100644
+--- a/OgreMain/include/Math/Simple/C/OgreAabb.inl
++++ b/OgreMain/include/Math/Simple/C/OgreAabb.inl
+@@ -106,8 +106,8 @@ namespace Ogre
+         //   abs( center.y - center2.y ) <= halfSize.y + halfSize2.y &&
+         //   abs( center.z - center2.z ) <= halfSize.z + halfSize2.z )
+         //TODO: Profile whether '&&' or '&' is faster. Probably varies per architecture.
+-        return ( Math::Abs( dist.x ) <= sumHalfSizes.x ) &
+-                ( Math::Abs( dist.y ) <= sumHalfSizes.y ) &
++        return ( Math::Abs( dist.x ) <= sumHalfSizes.x ) &&
++                ( Math::Abs( dist.y ) <= sumHalfSizes.y ) &&
+                 ( Math::Abs( dist.z ) <= sumHalfSizes.z );
+     }
+     //-----------------------------------------------------------------------------------
+@@ -127,8 +127,8 @@ namespace Ogre
+         // nan instead and return false, when it should return true)
+ 
+         //TODO: Profile whether '&&' or '&' is faster. Probably varies per architecture.
+-        return ( Math::Abs( dist.x ) + other.mHalfSize.x <= mHalfSize.x ) &
+-                ( Math::Abs( dist.y ) + other.mHalfSize.y <= mHalfSize.y ) &
++        return ( Math::Abs( dist.x ) + other.mHalfSize.x <= mHalfSize.x ) &&
++                ( Math::Abs( dist.y ) + other.mHalfSize.y <= mHalfSize.y ) &&
+                 ( Math::Abs( dist.z ) + other.mHalfSize.z <= mHalfSize.z );
+     }
+     //-----------------------------------------------------------------------------------
+@@ -139,8 +139,8 @@ namespace Ogre
+         // ( abs( dist.x ) <= mHalfSize.x &&
+         //   abs( dist.y ) <= mHalfSize.y &&
+         //   abs( dist.z ) <= mHalfSize.z )
+-        return ( Math::Abs( dist.x ) <= mHalfSize.x ) &
+-                ( Math::Abs( dist.y ) <= mHalfSize.y ) &
++        return ( Math::Abs( dist.x ) <= mHalfSize.x ) &&
++                ( Math::Abs( dist.y ) <= mHalfSize.y ) &&
+                 ( Math::Abs( dist.z ) <= mHalfSize.z );
+     }
+     //-----------------------------------------------------------------------------------
