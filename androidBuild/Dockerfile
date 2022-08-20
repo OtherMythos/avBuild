@@ -58,6 +58,7 @@ RUN apt-get --yes --no-install-recommends install openjdk-8-jdk
 
 
 COPY build.sh /avbuild/build.sh
+COPY ogreFix.diff /avbuild/ogreFix.diff
 
 RUN mkdir /avbuild/sdk
 #Just to see what options there are.
