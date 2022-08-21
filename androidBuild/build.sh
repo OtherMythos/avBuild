@@ -13,15 +13,16 @@ NDK_LOCATION="/avbuild/android-ndk-r25"
 #Variables
 NUM_THREADS=4
 CMAKE_BUILD_TYPE="Debug"
-CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE='${NDK_LOCATION}/build/cmake/android.toolchain.cmake'"
+ANDROID_ABI="arm64-v8a"
+CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DANDROID_ABI=${ANDROID_ABI} -DANDROID_NATIVE_API_LEVEL=24 -DCMAKE_TOOLCHAIN_FILE='${NDK_LOCATION}/build/cmake/android.toolchain.cmake'"
 #Build settings
 BUILD_OGRE=true
-BUILD_BULLET=false
-BUILD_SQUIRREL=false
-BUILD_ENTITYX=false
-BUILD_COLIBRI=false
-BUILD_DETOUR=false
-BUILD_SDL2=false
+BUILD_BULLET=true
+BUILD_SQUIRREL=true
+BUILD_ENTITYX=true
+BUILD_COLIBRI=true
+BUILD_DETOUR=true
+BUILD_SDL2=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -79,10 +80,7 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_CXX_STANDARD=11 \
-        -DANDROID_ABI=arm64-v8a \
-        -DANDROID_NATIVE_API_LEVEL=24 \
-        ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_CXX_STANDARD=11 ../..
     make -j${NUM_THREADS} || exit 1
     make install
 
@@ -92,8 +90,6 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
     cmake ${CMAKE_BUILD_SETTINGS} \
-        -DANDROID_ABI=arm64-v8a \
-        -DANDROID_NATIVE_API_LEVEL=24 \
         -DOGRE_BUILD_PLATFORM_ANDROID=1 \
         -DOGRE_DEPENDENCIES_DIR=${OGRE_DIR}/DependenciesAndroid \
         -DOGRE_SIMD_NEON=OFF \
@@ -102,6 +98,12 @@ if [ $BUILD_OGRE = true ]; then
         ../..
     make -j${NUM_THREADS} || exit 1
     make install
+
+    #Copy some extra libs over.
+    OGRE_ANDROID_DEPS=${INSTALL_DIR}/ogre2/androidDependencies
+    rm -rf ${OGRE_ANDROID_DEPS}
+    mkdir -p ${OGRE_ANDROID_DEPS}
+    find ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE} -name "*.a" -type f -exec cp {} ${OGRE_ANDROID_DEPS} \;
 else
     echo "Skipping ogre build"
 fi

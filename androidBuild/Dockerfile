@@ -57,13 +57,13 @@ RUN apt-get --yes --no-install-recommends install openjdk-8-jdk
 
 
 
-COPY build.sh /avbuild/build.sh
-COPY ogreFix.diff /avbuild/ogreFix.diff
-
 RUN mkdir /avbuild/sdk
 #Just to see what options there are.
 RUN /avbuild/cmdline-tools/bin/sdkmanager --list --sdk_root=/avbuild/sdk
 RUN yes | /avbuild/cmdline-tools/bin/sdkmanager --sdk_root=/avbuild/sdk "platforms;android-24" "ndk-bundle" "ndk;25.0.8775105" "build-tools;33.0.0" "build-tools;24.0.3" "cmake;3.22.1"
+
+COPY build.sh /avbuild/build.sh
+COPY ogreFix.diff /avbuild/ogreFix.diff
 
 RUN useradd -ms /bin/bash builder
 #USER builder
