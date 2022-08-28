@@ -74,6 +74,7 @@ IF %BUILD_OGRE% equ true (
     git clone --branch %OGRE_TARGET_BRANCH% https://github.com/OGRECave/ogre-next %OGRE_DIR%
     git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps %OGRE_DEPS_DIR%
 
+    @REM TODO This should just be build/ as both release and Debug end up in the same location.
     ::Build dependencies first.
     cd %OGRE_DEPS_DIR%
     mkdir "build\Debug"
@@ -86,6 +87,9 @@ IF %BUILD_OGRE% equ true (
 
     ::Build Ogre
     cd %OGRE_DIR%
+    @REM NOTE: Remove the debug.
+    ::Windows is really strict about who can create a symlink so unfortunately I have to duplicate the build over.
+    robocopy "%OGRE_DEPS_DIR%/build/Debug/ogredeps" "%OGRE_DIR%/Dependencies" /E
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
