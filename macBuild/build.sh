@@ -74,9 +74,9 @@ SDL2_TARGET_BRANCH="release-2.0.14"
 SDL2_DIR="${START_DIR}/SDL2"
 
 #OpenALSoft
-OPENALSOFT_TARGET_BRANCH="master"
+OPENALSOFT_TARGET_BRANCH="1.22.2"
 OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
-LIBSNDFILE_TARGET_BRANCH="ea3ac90e98c6a98cd52cae39010446fba368a2e3"
+LIBSNDFILE_TARGET_BRANCH="1.1.0"
 LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 
 #nativefiledialog
@@ -248,7 +248,6 @@ if [ $BUILD_OPENALSOFT = true ]; then
 
     git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
     cd ${OPENALSOFT_DIR}
-    git checkout dc83d99c95a42c960150ddeee06c124134b52208
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC ../..
@@ -256,14 +255,13 @@ if [ $BUILD_OPENALSOFT = true ]; then
     xcodebuild -scheme install -project OpenAL.xcodeproj
 
     #libsndfile which is a dependency for audio.
-    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
+    git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
     cd ${LIBSNDFILE_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_EXTERNAL_LIBS=False ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
     xcodebuild -scheme ALL_BUILD -project libsndfile.xcodeproj
     xcodebuild -scheme install -project libsndfile.xcodeproj
-    exit 1
 else
     echo "Skipping OpenALSoft build"
 fi
