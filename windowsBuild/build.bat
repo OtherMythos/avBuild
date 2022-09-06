@@ -52,17 +52,19 @@ SET "DETOUR_DIR=%START_DIR%\recastdetour"
 
 ::SDL2
 SET SDL2_TARGET_BRANCH="release-2.0.14"
-SET SDL2_DIR="%START_DIR%/SDL2"
+SET SDL2_DIR="%START_DIR%\SDL2"
 
 ::OpenALSoft
-SET OPENALSOFT_TARGET_BRANCH="master"
-SET OPENALSOFT_DIR="%START_DIR%/OpenALSoft"
+SET "OPENALSOFT_TARGET_BRANCH=master"
+SET "OPENALSOFT_DIR=%START_DIR%\OpenALSoft"
+SET "LIBSNDFILE_TARGET_BRANCH=1.1.0"
+SET "LIBSNDFILE_DIR=%START_DIR%\libsndfile"
 
 ::nativefiledialog
 SET NFD_TARGET_BRANCH="master"
-SET NFD_DIR="%START_DIR%/nativefiledialog"
+SET NFD_DIR="%START_DIR%\nativefiledialog"
 
-SET GOOGLETEST_DIR="%START_DIR%/googletest"
+SET GOOGLETEST_DIR="%START_DIR%\googletest"
 
 ::Start
 cd %START_DIR%
@@ -182,10 +184,17 @@ IF %BUILD_OPENALSOFT% equ true (
 
     git clone --branch %OPENALSOFT_TARGET_BRANCH% https://github.com/kcat/openal-soft.git %OPENALSOFT_DIR%
     cd %OPENALSOFT_DIR%
-    git checkout dc83d99c95a42c960150ddeee06c124134b52208
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/OpenALSoft -DLIBTYPE=STATIC ../..
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+
+    ::libsndfile which is a dependency for audio.
+    git clone --branch %LIBSNDFILE_TARGET_BRANCH% https://github.com/libsndfile/libsndfile.git %LIBSNDFILE_DIR%
+    cd %LIBSNDFILE_DIR%
+    mkdir "build/%CMAKE_BUILD_TYPE%"
+    cd "build/%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
 )
 
