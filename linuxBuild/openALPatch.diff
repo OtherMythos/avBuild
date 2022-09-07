@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1984ac97..6065f0eb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -349,7 +349,7 @@ else()
+     if(HAVE_GCC_PROTECTED_VISIBILITY OR HAVE_GCC_DEFAULT_VISIBILITY)
+         check_c_compiler_flag(-fvisibility=hidden HAVE_VISIBILITY_HIDDEN_SWITCH)
+         if(HAVE_VISIBILITY_HIDDEN_SWITCH)
+-            set(C_FLAGS ${C_FLAGS} -fvisibility=hidden)
++            #set(C_FLAGS ${C_FLAGS} -fvisibility=hidden)
+         endif()
+     endif()
+ 

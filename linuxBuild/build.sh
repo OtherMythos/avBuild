@@ -224,6 +224,8 @@ if [ $BUILD_OPENALSOFT = true ]; then
 
     git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
     cd ${OPENALSOFT_DIR}
+    #For static builds to prevent it producing hidden symbols.
+    git apply ${SCRIPT_DIR}/openALPatch.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Pipewire gave me issues on my archlinux setup.
