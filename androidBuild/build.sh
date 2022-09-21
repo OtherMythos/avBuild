@@ -23,6 +23,7 @@ BUILD_ENTITYX=true
 BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
+BUILD_OPENALSOFT=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -57,6 +58,12 @@ DETOUR_DIR="${START_DIR}/recastdetour"
 #SDL2_TARGET_BRANCH="release-2.0.22"
 SDL2_TARGET_BRANCH="main"
 SDL2_DIR="${START_DIR}/SDL2"
+
+#OpenALSoft
+OPENALSOFT_TARGET_BRANCH="1.22.2"
+OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
+LIBSNDFILE_TARGET_BRANCH="1.1.0"
+LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -241,6 +248,31 @@ if [ $BUILD_SDL2 = true ]; then
 
 else
     echo "Skipping SDL2 build"
+fi
+
+#OpenALSoft
+if [ $BUILD_OPENALSOFT = true ]; then
+    echo "building OpenALSoft"
+
+    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
+    cd ${OPENALSOFT_DIR}
+    #For static builds to prevent it producing hidden symbols.
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC ../..
+    make -j${NUM_THREADS} || exit 1
+    make install
+
+    #libsndfile which is a dependency for audio.
+    git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
+    cd ${LIBSNDFILE_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
+    make -j${NUM_THREADS} || exit 1
+    make install
+else
+    echo "Skipping OpenALSoft build"
 fi
 
 #Clone helper libs that don't directly need compiling.
