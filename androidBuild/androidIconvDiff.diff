@@ -1,0 +1,31 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 44e4d725e..d324bcb60 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1013,16 +1013,16 @@ if(SDL_LIBC)
+       endif()
+     endif()
+ 
+-    check_library_exists(iconv iconv_open "" HAVE_LIBICONV)
+-    if(HAVE_LIBICONV)
+-      list(APPEND EXTRA_LIBS iconv)
+-      set(HAVE_ICONV 1)
+-    else()
+-      check_library_exists(c iconv_open "" HAVE_BUILTIN_ICONV)
+-      if(HAVE_BUILTIN_ICONV)
+-        set(HAVE_ICONV 1)
+-      endif()
+-    endif()
++    #check_library_exists(iconv iconv_open "" HAVE_LIBICONV)
++    #if(HAVE_LIBICONV)
++    #  list(APPEND EXTRA_LIBS iconv)
++    #  set(HAVE_ICONV 1)
++    #else()
++    #  check_library_exists(c iconv_open "" HAVE_BUILTIN_ICONV)
++    #  if(HAVE_BUILTIN_ICONV)
++    #    set(HAVE_ICONV 1)
++    #  endif()
++    #endif()
+ 
+     if(NOT APPLE)
+       check_include_file(alloca.h HAVE_ALLOCA_H)

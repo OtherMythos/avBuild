@@ -187,6 +187,9 @@ if [ $BUILD_COLIBRI = true ]; then
     cd Dependencies/sds_library
     #git apply ${SCRIPT_DIR}/../linuxBuild/sds_patch.diff
     git apply ${SCRIPT_DIR}/androidSdsDiff.diff
+    cd ..
+    mkdir ${INSTALL_DIR}/sds_library
+    cp -r sds_library/include ${INSTALL_DIR}/sds_library
     cd ${COLIBRI_DIR}
 
     mkdir -p build/${CMAKE_BUILD_TYPE}
@@ -237,6 +240,7 @@ if [ $BUILD_SDL2 = true ]; then
 
     git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
     cd ${SDL2_DIR}
+    git apply ${SCRIPT_DIR}/androidIconvDiff.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DANDROID_PLATFORM=33 -DSDL_OPENGLES=FALSE -DSDL_OPENGL=FALSE -DSDL_HID=TRUE -DSDL_HAPTIC=TRUE -DSDL_FILESYSTEM=TRUE -DSDL_AUDIO=FALSE -DSDL_MISC=FALSE -DSDL_SHARED=FALSE ../..
