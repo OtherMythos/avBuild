@@ -14,7 +14,9 @@ RUN apt-get update && apt-get install -y \
     wget \
     strace \
     patchelf \
-    unzip
+    unzip \
+    vim \
+    ranger
 
 RUN mkdir -p /avbuild
 WORKDIR /avbuild
