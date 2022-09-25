@@ -164,6 +164,9 @@ if [ $BUILD_COLIBRI = true ]; then
     #There's probably a compiler flag fix for this but I don't know it :)
     cd Dependencies/sds_library
     git apply ${SCRIPT_DIR}/sds_patch.diff
+    cd ..
+    mkdir ${INSTALL_DIR}/sds_library
+    cp -r sds_library/include ${INSTALL_DIR}/sds_library
     cd ${COLIBRI_DIR}
 
     mkdir -p build/${CMAKE_BUILD_TYPE}
