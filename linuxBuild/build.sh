@@ -232,7 +232,7 @@ if [ $BUILD_OPENALSOFT = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Pipewire gave me issues on my archlinux setup.
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DALSOFT_BACKEND_PIPEWIRE=OFF -DLIBTYPE=STATIC ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DALSOFT_BACKEND_PIPEWIRE=OFF -DALSOFT_BACKEND_SNDIO=OFF -DLIBTYPE=STATIC ../..
     make -j${NUM_THREADS} || exit 1
     make install
 
