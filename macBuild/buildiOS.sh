@@ -156,10 +156,9 @@ if [ $BUILD_SQUIRREL = true ]; then
 
     git clone --branch ${SQUIRREL_TARGET_BRANCH} https://github.com/albertodemichelis/squirrel.git ${SQUIRREL_DIR}
     cd ${SQUIRREL_DIR}
-    git apply /Users/edward/Documents/avBuild/macBuild/iosSquirrelPatch.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DDISABLE_DYNAMIC=True -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DDISABLE_DYNAMIC=True -DSQ_DISABLE_INTERPRETER=True -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel -DCMAKE_CXX_FLAGS="-DIOS" ../..
 
     xcodebuild -scheme ALL_BUILD -project squirrel.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project squirrel.xcodeproj -destination generic/platform=iOS
