@@ -106,7 +106,7 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} ${STATIC_FLAGS} -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
+    cmake ${CMAKE_BUILD_SETTINGS} ${STATIC_FLAGS} -DOGRE_BUILD_SAMPLES2=False -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
     xcodebuild -scheme ALL_BUILD -project OGREDEPS.xcodeproj
     xcodebuild -scheme install -project OGREDEPS.xcodeproj
 
