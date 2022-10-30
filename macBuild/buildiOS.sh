@@ -6,6 +6,8 @@ if [ -v ${1} ]; then
     exit 1
 fi
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 CMAKE_BUILD_TYPE="Debug"
 BUILD_IOS=true
 
@@ -87,9 +89,6 @@ if [ $BUILD_OGRE = true ]; then
     #Build Ogre
     cd ${OGRE_DIR}
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps iOSDependencies
-    #Clear up some bugs in ogre.
-    #git apply git.diff
-    git apply /Users/edward/Documents/avBuild/macBuild/git.diff
     #This material breaks the samples when using metal.
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.materialll
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.materiallll
@@ -241,7 +240,7 @@ if [ $BUILD_SDL2 = true ]; then
 
     git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
     cd ${SDL2_DIR}
-    git apply /Users/edward/Documents/avBuild/macBuild/iosDiff.diff
+    git apply ${SCRIPT_DIR}/iosDiff.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
 

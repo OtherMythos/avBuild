@@ -43,9 +43,6 @@ if [ $BUILD_OGRE = true ]; then
     #Build Ogre
     cd ${OGRE_DIR}
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
-    #Clear up some bugs in ogre.
-    #git apply git.diff
-    git apply /Users/edward/Documents/avBuild/macBuild/git.diff
     #This material breaks the samples when using metal.
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/HiddenAreaMeshVr.materialll
     mv ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.material ${OGRE_DIR}/Samples/Media/2.0/scripts/materials/Common/RadialDensityMask.materiallll
