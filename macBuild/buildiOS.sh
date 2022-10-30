@@ -29,6 +29,7 @@ BUILD_ENTITYX=true
 BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
+BUILD_OPENALSOFT=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -62,6 +63,12 @@ DETOUR_DIR="${START_DIR}/recastdetour"
 #SDL2
 SDL2_TARGET_BRANCH="release-2.0.14"
 SDL2_DIR="${START_DIR}/SDL2"
+
+#OpenALSoft
+OPENALSOFT_TARGET_BRANCH="1.22.2"
+OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
+LIBSNDFILE_TARGET_BRANCH="1.1.0"
+LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -251,6 +258,30 @@ if [ $BUILD_SDL2 = true ]; then
     cp -r ${SDL2_DIR}/src/ ${INSTALL_DIR}/SDL2/src
 else
     echo "Skipping SDL2 build"
+fi
+
+#OpenALSoft
+if [ $BUILD_OPENALSOFT = true ]; then
+    echo "building OpenALSoft"
+
+    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
+    cd ${OPENALSOFT_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC -DALSOFT_EXAMPLES=False -DALSOFT_UTILS=False ../..
+    xcodebuild -scheme ALL_BUILD -project OpenAL.xcodeproj -destination generic/platform=iOS
+    xcodebuild -scheme install -project OpenAL.xcodeproj -destination generic/platform=iOS
+
+    #libsndfile which is a dependency for audio.
+    git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
+    cd ${LIBSNDFILE_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_EXTERNAL_LIBS=False ../..
+    xcodebuild -scheme sndfile -project libsndfile.xcodeproj -destination generic/platform=iOS
+    xcodebuild -scheme install -project libsndfile.xcodeproj -destination generic/platform=iOS
+else
+    echo "Skipping OpenALSoft build"
 fi
 
 #googletest
