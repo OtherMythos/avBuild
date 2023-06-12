@@ -33,7 +33,7 @@ SQUIRREL_TARGET_BRANCH="master"
 SQUIRREL_DIR="${START_DIR}/squirrel"
 
 #RecastDetour
-DETOUR_TARGET_BRANCH="master"
+DETOUR_TARGET_BRANCH="main"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2

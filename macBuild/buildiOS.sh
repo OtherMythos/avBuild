@@ -57,7 +57,7 @@ COLIBRI_TARGET_BRANCH="master"
 COLIBRI_DIR="${START_DIR}/colibri"
 
 #RecastDetour
-DETOUR_TARGET_BRANCH="master"
+DETOUR_TARGET_BRANCH="main"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2
