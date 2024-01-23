@@ -84,8 +84,8 @@ IF %BUILD_OGRE% equ true (
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 ../..
     ::This performs both the build and install.
     ::Build both debug and release as this solves some Ogre find vulkan issues.
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj /p:Configuration=Debug
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj /p:Configuration=Release
+    cmake --build . --target install --config Debug
+    cmake --build . --target install --config Release
 
     ::Build Ogre
     cd %OGRE_DIR%
@@ -95,7 +95,7 @@ IF %BUILD_OGRE% equ true (
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build . --target install
 )
 
 ::Bullet
@@ -107,7 +107,8 @@ IF %BUILD_BULLET% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet3 -DUSE_MSVC_RUNTIME_LIBRARY_DLL=True ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" BULLET_PHYSICS.sln
+    cmake --build .
+    @REM cmake --build . --target install
     ::Don't do the provided install for bullet. It had some weirdness.
     mkdir %INSTALL_DIR%\bullet3\include
     mkdir %INSTALL_DIR%\bullet3\lib
@@ -124,7 +125,8 @@ IF %BUILD_SQUIRREL% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\squirrel ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 )
 
 ::EntityX
@@ -136,7 +138,8 @@ IF %BUILD_ENTITYX% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\entityx ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 )
 
 ::Colibri
@@ -152,7 +155,7 @@ IF %BUILD_COLIBRI% equ true (
     move "Dependencies\Ogre\Dependencies\include\include" "Dependencies\Ogre\Dependencies\include\rapidjson"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\colibri ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" ALL_BUILD.vcxproj
+    cmake --build .
 
     rmdir /S /Q "%INSTALL_DIR%/colibri"
     mkdir "%INSTALL_DIR%/colibri"
@@ -175,7 +178,8 @@ IF %BUILD_DETOUR% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\recastdetour ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 )
 
 ::OpenALSoft
@@ -187,7 +191,8 @@ IF %BUILD_OPENALSOFT% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/OpenALSoft -DLIBTYPE=STATIC ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 
     ::libsndfile which is a dependency for audio.
     git clone --branch %LIBSNDFILE_TARGET_BRANCH% https://github.com/libsndfile/libsndfile.git %LIBSNDFILE_DIR%
@@ -195,7 +200,8 @@ IF %BUILD_OPENALSOFT% equ true (
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 )
 
 ::nativefiledialog
@@ -207,7 +213,8 @@ IF %BUILD_NFD% equ true (
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/nativefiledialog ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 )
 
 ::googletest
@@ -219,17 +226,24 @@ IF %BUILD_GOOGLETEST% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\googletest ../..
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" INSTALL.vcxproj
+    cmake --build .
+    cmake --build . --target install
 )
 
 cd %INSTALL_DIR%
 
-::Get SDL2 as the built binary on Windows. It's hosted on Mercurial which made it difficult.
-rmdir /S /Q SDL2 SDL2-2.0.14
-curl --url https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip --output "%INSTALL_DIR%\sdl2.zip"
-tar -xf sdl2.zip
-del sdl2.zip
-ren SDL2-2.0.14 SDL2
+::SDL2
+IF %BUILD_SDL2% equ true (
+    echo "building SDL2"
+
+    git clone --branch %SDL2_TARGET_BRANCH% https://github.com/libsdl-org/SDL.git %SDL2_DIR%
+    cd %SDL2_DIR%
+    mkdir "build/%CMAKE_BUILD_TYPE%"
+    cd "build/%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/SDL2 ../..
+    cmake --build .
+    cmake --build . --target install
+)
 
 ::#Clone helper libs that don't directly need compiling.
 git clone https://github.com/wjakob/filesystem.git %INSTALL_DIR%\filesystem
@@ -239,7 +253,6 @@ git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
 ::Copy in the rapidjson provided by ogre, not the latest cloned one.
 mkdir %INSTALL_DIR%/rapidjson/include/rapidjson
 robocopy %OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps/include/rapidjson %INSTALL_DIR%/rapidjson/include/rapidjson /E
-
 
 exit 1
 
