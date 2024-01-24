@@ -94,7 +94,7 @@ IF %BUILD_OGRE% equ true (
     robocopy "%OGRE_DEPS_DIR%/build/Debug/ogredeps" "%OGRE_DIR%/Dependencies" /E
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
-    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
+    cmake %CMAKE_BUILD_SETTINGS% -DOGRE_BUILD_SAMPLES2=False -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
     cmake --build . --target install
 )
 
@@ -251,8 +251,8 @@ git clone https://github.com/gabime/spdlog.git %INSTALL_DIR%\spdlog
 git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
 
 ::Copy in the rapidjson provided by ogre, not the latest cloned one.
-mkdir %INSTALL_DIR%/rapidjson/include/rapidjson
-robocopy %OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps/include/rapidjson %INSTALL_DIR%/rapidjson/include/rapidjson /E
+mkdir %INSTALL_DIR%\rapidjson\include\rapidjson
+robocopy %OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps\include\rapidjson %INSTALL_DIR%\rapidjson\include\rapidjson /E
 
 exit 1
 

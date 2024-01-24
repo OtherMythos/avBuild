@@ -15,3 +15,11 @@ jobs:
         run: |
           mkdir D:\build
           windowsBuild\build.bat D:\build
+      - name: Compress Artifacts
+        run: |
+          Compress-Archive -Path D:\build\avBuilt\ -DestinationPath D:\build\avBuilt-windows.zip
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: avBuiltWindows.zip
+          path: D:\build\avBuilt-windows.zip
