@@ -11,6 +11,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup
+        run: |
+          sudo apt-get update && sudo apt-get install -y
+          libxaw7-dev \
+          libxrandr-dev \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev
       - name: Build
         run: |
           mkdir ~/build
