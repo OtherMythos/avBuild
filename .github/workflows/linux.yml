@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup
         run: |
-          sudo apt-get update && sudo apt-get install -y libxaw7-dev libxrandr-dev
+          sudo apt-get update && sudo apt-get install -y libxaw7-dev libxrandr-dev libxcb-randr0-dev
       - name: Build
         run: |
           mkdir ~/build
