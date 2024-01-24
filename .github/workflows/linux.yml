@@ -1,0 +1,25 @@
+name: linux
+
+on:
+  push:
+    branches:  'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          mkdir /build
+          linuxBuild/build.sh /build
+      - name: Compress Artifacts
+        run: |
+          zip -r /build.zip /build/avBuilt
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: avBuiltLinux.zip
+          path: /build.zip
