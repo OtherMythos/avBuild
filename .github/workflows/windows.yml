@@ -12,4 +12,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
-        run: windowsBuild\build.bat C:\build
+        run: |
+          mkdir build
+          windowsBuild\build.bat build
