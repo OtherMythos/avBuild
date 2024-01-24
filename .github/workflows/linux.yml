@@ -14,10 +14,8 @@ jobs:
       - name: Setup
         run: |
           sudo apt-get update && sudo apt-get install -y
-          libxaw7-dev \
-          libxrandr-dev \
-          libgl1-mesa-dev \
-          libglu1-mesa-dev
+          libxaw-dev \
+          libxrandr-dev
       - name: Build
         run: |
           mkdir ~/build
