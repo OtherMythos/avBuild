@@ -13,13 +13,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Build
         run: |
-          mkdir /build
-          linuxBuild/build.sh /build
+          mkdir ./build
+          linuxBuild/build.sh ./build
       - name: Compress Artifacts
         run: |
-          zip -r /build.zip /build/avBuilt
+          zip -r ./build.zip ./build/avBuilt
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: avBuiltLinux.zip
-          path: /build.zip
+          path: ./build.zip
