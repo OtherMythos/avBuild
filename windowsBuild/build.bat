@@ -11,15 +11,15 @@ SET "CMAKE_BUILD_TYPE=Debug"
 SET "CMAKE_BUILD_SETTINGS=-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 :: Build settings
 SET BUILD_OGRE=true
-SET BUILD_BULLET=false
-SET BUILD_SQUIRREL=false
-SET BUILD_ENTITYX=false
-SET BUILD_COLIBRI=false
-SET BUILD_DETOUR=false
-SET BUILD_SDL2=false
-SET BUILD_OPENALSOFT=false
-SET BUILD_NFD=false
-SET BUILD_GOOGLETEST=false
+SET BUILD_BULLET=true
+SET BUILD_SQUIRREL=true
+SET BUILD_ENTITYX=true
+SET BUILD_COLIBRI=true
+SET BUILD_DETOUR=true
+SET BUILD_SDL2=true
+SET BUILD_OPENALSOFT=true
+SET BUILD_NFD=true
+SET BUILD_GOOGLETEST=true
 
 SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
 
@@ -254,8 +254,8 @@ git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
 mkdir %INSTALL_DIR%\rapidjson\include\rapidjson
 robocopy %OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps\include\rapidjson %INSTALL_DIR%\rapidjson\include\rapidjson /E
 
-exit 1
+exit 0
 
 :NoPath
     echo "Please provide a build directory path."
-exit 1
+exit 0
