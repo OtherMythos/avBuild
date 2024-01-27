@@ -1,0 +1,25 @@
+name: macOS
+
+on:
+  push:
+    branches: 'master'
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          mkdir ~/build
+          macBuild/build.sh ~/build
+      - name: Compress Artifacts
+        run: |
+          tar -zcvf ~/build.tar.gz ~/build/avBuilt
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: avBuiltMacOS.tar.gz
+          path: ~/build.tar.gz
