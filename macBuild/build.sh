@@ -13,7 +13,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 echo "Building to path ${START_DIR}"
 
 #Fill with either 'x86_64' or 'arm64' to override the platform detection.
-TARGET_ARCH=""
+TARGET_ARCH="${2}"
 if [ -z ${TARGET_ARCH} ]; then
     TARGET_ARCH=$(arch)
     #For historical reasons arch might return this on x86 processors.
