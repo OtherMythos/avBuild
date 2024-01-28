@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: |
           mkdir ~/build
-          macBuild/build.sh ~/build i386
+          macBuild/build.sh ~/build arm64
       - name: Compress Artifacts
         run: |
           cd ~/build/avBuilt
