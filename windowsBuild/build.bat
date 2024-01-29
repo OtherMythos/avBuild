@@ -43,7 +43,7 @@ SET "ENTITYX_TARGET_BRANCH=master"
 SET "ENTITYX_DIR=%START_DIR%\entityx"
 
 ::ColibriGUI
-SET "COLIBRI_TARGET_BRANCH=master"
+SET "COLIBRI_TARGET_BRANCH=flexibilityFix"
 SET "COLIBRI_DIR=%START_DIR%\colibri"
 
 ::RecastDetour
@@ -145,7 +145,7 @@ IF %BUILD_ENTITYX% equ true (
 ::Colibri
 IF %BUILD_COLIBRI% equ true (
     echo "building ColibriGUI"
-    git clone --recurse-submodules --shallow-submodules --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
+    git clone --recurse-submodules --shallow-submodules --branch %COLIBRI_TARGET_BRANCH% https://github.com/edherbert/colibrigui.git %COLIBRI_DIR%
     cd %COLIBRI_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
