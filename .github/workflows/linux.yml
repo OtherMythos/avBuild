@@ -20,7 +20,8 @@ jobs:
           linuxBuild/build.sh ~/build
       - name: Compress Artifacts
         run: |
-          tar -zcvf ~/build.tar.gz ~/build/avBuilt
+          cd ~/build/avBuilt
+          tar -zcvf ~/build.tar.gz *
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
