@@ -154,7 +154,7 @@ IF %BUILD_COLIBRI% equ true (
     robocopy "%OGRE_DEPS_DIR%\src\rapidjson" "Dependencies\Ogre\Dependencies\include" /E
     move "Dependencies\Ogre\Dependencies\include\include" "Dependencies\Ogre\Dependencies\include\rapidjson"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\colibri ../..
+    cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\colibri ../..
     cmake --build .
 
     rmdir /S /Q "%INSTALL_DIR%/colibri"
