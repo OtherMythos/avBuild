@@ -7,19 +7,21 @@ on:
 jobs:
   build:
     runs-on: windows-2019
-
+    strategy:
+      matrix:
+        buildType: [Debug, Release]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
         run: |
           mkdir D:\build
-          windowsBuild\build.bat D:\build
+          windowsBuild\build.bat D:\build ${{ matrix.buildType }}
       - name: Compress Artifacts
         run: |
-          Compress-Archive -Path D:\build\avBuilt\ -DestinationPath D:\build\avBuilt-windows.zip
+          Compress-Archive -Path D:\build\avBuilt\ -DestinationPath D:\build\avBuilt-windows-${{ matrix.buildType }}.zip
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: avBuiltWindows.zip
-          path: D:\build\avBuilt-windows.zip
+          name: avBuiltWindows-${{ matrix.buildType }}.zip
+          path: D:\build\avBuilt-windows-${{ matrix.buildType }}.zip

@@ -2,6 +2,7 @@
 SETLOCAL
 
 SET "START_DIR=%1%"
+SET "BUILD_TYPE=%2%"
 echo %START_DIR%
 
 IF "%~1" == "" GOTO NoPath
