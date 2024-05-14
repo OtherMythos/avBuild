@@ -1,0 +1,12 @@
+diff --git a/src/sds/sds_fstreamNsud.mm b/src/sds/sds_fstreamNsud.mm
+index 4894eed..8e2c05a 100644
+--- a/src/sds/sds_fstreamNsud.mm
++++ b/src/sds/sds_fstreamNsud.mm
+@@ -4,6 +4,7 @@
+ #include "sds/sds_fstreamNsud.h"
+ 
+ #include <limits>
++#include <cassert>
+ 
+ #import <Foundation/NSData.h>
+ #import <Foundation/NSString.h>

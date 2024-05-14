@@ -15,7 +15,7 @@ CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -G Xcode"
 
 if [ $BUILD_IOS = true ]; then
     echo "Building for ios"
-    CMAKE_BUILD_SETTINGS="${CMAKE_BUILD_SETTINGS} -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=10.0"
+    CMAKE_BUILD_SETTINGS="${CMAKE_BUILD_SETTINGS} -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0"
 else
     echo "Building for macos"
     CMAKE_BUILD_SETTINGS="${CMAKE_BUILD_SETTINGS} -DCMAKE_OSX_ARCHITECTURES=x86_64"
@@ -53,7 +53,7 @@ ENTITYX_TARGET_BRANCH="master"
 ENTITYX_DIR="${START_DIR}/entityx"
 
 #ColibriGUI
-COLIBRI_TARGET_BRANCH="master"
+COLIBRI_TARGET_BRANCH="flexibilityFix"
 COLIBRI_DIR="${START_DIR}/colibri"
 
 #RecastDetour
@@ -191,13 +191,17 @@ fi
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
-    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/edherbert/colibrigui.git ${COLIBRI_DIR}
     cd ${COLIBRI_DIR}
     cd Dependencies
     rm Ogre
     #Link relative to the build directory, not the container.
     ln -s ../../${OGRE_DIR_NAME} Ogre
     cd ..
+
+    cd Dependencies/sds_library
+    git apply ${SCRIPT_DIR}/iosSdsDiff.diff
+    cd ${COLIBRI_DIR}
 
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
