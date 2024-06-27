@@ -295,7 +295,7 @@ fi
 #Clone helper libs that don't directly need compiling.
 cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem
-git clone https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
+git clone --branch v1.13.0 https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
 git clone https://github.com/ocornut/imgui.git ${INSTALL_DIR}/imgui
 git clone https://github.com/edherbert/ogre-next-imgui.git ${INSTALL_DIR}/ogre-next-imgui

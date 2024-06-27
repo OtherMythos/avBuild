@@ -248,7 +248,7 @@ IF %BUILD_SDL2% equ true (
 
 ::#Clone helper libs that don't directly need compiling.
 git clone https://github.com/wjakob/filesystem.git %INSTALL_DIR%\filesystem
-git clone https://github.com/gabime/spdlog.git %INSTALL_DIR%\spdlog
+git clone --branch v1.13.0 https://github.com/gabime/spdlog.git %INSTALL_DIR%\spdlog
 git clone https://github.com/leethomason/tinyxml2.git %INSTALL_DIR%\tinyxml2
 
 ::Copy in the rapidjson provided by ogre, not the latest cloned one.
