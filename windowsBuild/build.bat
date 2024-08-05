@@ -9,8 +9,9 @@ IF "%~1" == "" GOTO NoPath
 
 SET NUM_THREADS=4
 SET "CMAKE_BUILD_TYPE=%BUILD_TYPE%"
-SET "CMAKE_BUILD_SETTINGS=-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
-:: Build settings
+SET "CMAKE_BUILD_SETTINGS=-DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE%"
+SET "CMAKE_CONFIG_SETTINGS=--config %CMAKE_BUILD_TYPE%"
+:: Build settigs
 SET BUILD_OGRE=true
 SET BUILD_BULLET=true
 SET BUILD_SQUIRREL=true
@@ -80,8 +81,8 @@ IF %BUILD_OGRE% equ true (
     @REM TODO This should just be build/ as both release and Debug end up in the same location.
     ::Build dependencies first.
     cd %OGRE_DEPS_DIR%
-    mkdir "build\Debug"
-    cd "build\Debug"
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 ../..
     ::This performs both the build and install.
     ::Build both debug and release as this solves some Ogre find vulkan issues.
@@ -92,11 +93,11 @@ IF %BUILD_OGRE% equ true (
     cd %OGRE_DIR%
     @REM NOTE: Remove the debug.
     ::Windows is really strict about who can create a symlink so unfortunately I have to duplicate the build over.
-    robocopy "%OGRE_DEPS_DIR%/build/Debug/ogredeps" "%OGRE_DIR%/Dependencies" /E
+    robocopy "%OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps" "%OGRE_DIR%/Dependencies" /E
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
     cmake %CMAKE_BUILD_SETTINGS% -DOGRE_BUILD_SAMPLES2=False -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
-    cmake --build . --target install
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::Bullet
@@ -108,12 +109,12 @@ IF %BUILD_BULLET% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\bullet3 -DUSE_MSVC_RUNTIME_LIBRARY_DLL=True ../..
-    cmake --build .
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
     @REM cmake --build . --target install
     ::Don't do the provided install for bullet. It had some weirdness.
     mkdir %INSTALL_DIR%\bullet3\include
     mkdir %INSTALL_DIR%\bullet3\lib
-    robocopy .\lib\Debug\ %INSTALL_DIR%\bullet3\lib *.lib
+    robocopy .\lib\%CMAKE_BUILD_TYPE%\ %INSTALL_DIR%\bullet3\lib *.lib
     robocopy %BULLET_DIR%\src %INSTALL_DIR%\bullet3\include\bullet /S
 )
 
@@ -126,8 +127,8 @@ IF %BUILD_SQUIRREL% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\squirrel ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::EntityX
@@ -139,8 +140,8 @@ IF %BUILD_ENTITYX% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\entityx ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::Colibri
@@ -156,7 +157,7 @@ IF %BUILD_COLIBRI% equ true (
     move "Dependencies\Ogre\Dependencies\include\include" "Dependencies\Ogre\Dependencies\include\rapidjson"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DOGRE_SOURCE=%OGRE_DIR% -DOGRE_BINARIES=%OGRE_BIN_DIR% -DCOLIBRIGUI_LIB_ONLY=TRUE -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\colibri ../..
-    cmake --build .
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
 
     rmdir /S /Q "%INSTALL_DIR%/colibri"
     mkdir "%INSTALL_DIR%/colibri"
@@ -179,8 +180,8 @@ IF %BUILD_DETOUR% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\recastdetour ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::OpenALSoft
@@ -192,8 +193,8 @@ IF %BUILD_OPENALSOFT% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/OpenALSoft -DLIBTYPE=STATIC ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 
     ::libsndfile which is a dependency for audio.
     git clone --branch %LIBSNDFILE_TARGET_BRANCH% https://github.com/libsndfile/libsndfile.git %LIBSNDFILE_DIR%
@@ -201,8 +202,8 @@ IF %BUILD_OPENALSOFT% equ true (
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::nativefiledialog
@@ -214,8 +215,8 @@ IF %BUILD_NFD% equ true (
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/nativefiledialog ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::googletest
@@ -227,8 +228,8 @@ IF %BUILD_GOOGLETEST% equ true (
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\googletest ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 cd %INSTALL_DIR%
@@ -242,8 +243,8 @@ IF %BUILD_SDL2% equ true (
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/SDL2 ../..
-    cmake --build .
-    cmake --build . --target install
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
 
 ::#Clone helper libs that don't directly need compiling.
