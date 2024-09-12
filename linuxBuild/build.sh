@@ -6,11 +6,17 @@ if [ -v ${1} ]; then
     exit 1
 fi
 
+CMAKE_BUILD_TYPE="Debug"
+if [ ${2+x} ]; then
+    CMAKE_BUILD_TYPE=${2}
+    echo "Build type set to '${2}'"
+fi
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+echo "Builld type is ${CMAKE_BUILD_TYPE}"
 #Variables
 NUM_THREADS=4
-CMAKE_BUILD_TYPE="Debug"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 #Build settings
 BUILD_OGRE=true

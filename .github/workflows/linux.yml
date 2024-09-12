@@ -7,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        buildType: [Debug, Release]
 
     steps:
       - name: Checkout
@@ -17,7 +20,7 @@ jobs:
       - name: Build
         run: |
           mkdir ~/build
-          linuxBuild/build.sh ~/build
+          linuxBuild/build.sh ~/build ${{ matrix.buildType }}
       - name: Compress Artifacts
         run: |
           cd ~/build/avBuilt
@@ -25,5 +28,5 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: avBuiltLinux.tar.gz
+          name: avBuiltLinux-${{ matrix.buildType }}.tar.gz
           path: ~/build.tar.gz
