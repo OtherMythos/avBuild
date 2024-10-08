@@ -145,7 +145,7 @@ if [ $BUILD_ENTITYX = true ]; then
     cd ${ENTITYX_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else
