@@ -25,9 +25,14 @@ else
     echo "Using architecture ${TARGET_ARCH}"
 fi
 
+CMAKE_BUILD_TYPE="Debug"
+if [ ${3+x} ]; then
+    CMAKE_BUILD_TYPE=${3}
+    echo "Build type set to '${3}'"
+fi
+
 #Variables
 NUM_THREADS=4
-CMAKE_BUILD_TYPE="Debug"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_OSX_ARCHITECTURES=${TARGET_ARCH} -G Xcode"
 #Build settings
 BUILD_OGRE=true
