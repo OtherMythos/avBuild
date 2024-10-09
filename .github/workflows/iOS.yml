@@ -1,0 +1,29 @@
+name: iOS
+
+on:
+  push:
+    branches: 'master'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        buildType: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          mkdir ~/build
+          macBuild/buildiOS.sh ~/build ${{ matrix.buildType }}
+      - name: Compress Artifacts
+        run: |
+          cd ~/build/avBuilt
+          tar -zcvf ~/build.tar.gz *
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: avBuiltiOS_${{ matrix.buildType }}.tar.gz
+          path: ~/build.tar.gz

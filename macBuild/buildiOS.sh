@@ -9,6 +9,10 @@ fi
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 CMAKE_BUILD_TYPE="Debug"
+if [ ${2+x} ]; then
+    CMAKE_BUILD_TYPE=${2}
+    echo "Build type set to '${2}'"
+fi
 BUILD_IOS=true
 
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -G Xcode"
