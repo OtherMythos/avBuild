@@ -72,6 +72,10 @@ LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 NFD_TARGET_BRANCH="master"
 NFD_DIR="${START_DIR}/nativefiledialog"
 
+#Lottie
+LOTTIE_TARGET_BRANCH="master"
+LOTTIE_DIR="${START_DIR}/rlottie"
+
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
 #Start
@@ -263,6 +267,22 @@ if [ $BUILD_NFD = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
+    make -j${NUM_THREADS} || exit 1
+    make install
+else
+    echo "Skipping nativefiledialog build"
+fi
+
+#lottie
+if [ $BUILD_LOTTIE = true ]; then
+    echo "building rlottie"
+
+    git clone --branch ${LOTTIE_TARGET_BRANCH} https://github.com/Samsung/rlottie.git ${LOTTIE_DIR}
+    cd ${LOTTIE_DIR}
+    git apply ${SCRIPT_DIR}/../macBuild/lottiePatch.diff
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_POSITION_INDEPENDENT_CODE=True -DBUILD_SHARED_LIBS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else
