@@ -43,6 +43,7 @@ BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
 BUILD_OPENALSOFT=true
+BUILD_LOTTIE=true
 BUILD_NFD=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
@@ -87,6 +88,10 @@ LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 #nativefiledialog
 NFD_TARGET_BRANCH="master"
 NFD_DIR="${START_DIR}/nativefiledialog"
+
+#Lottie
+LOTTIE_TARGET_BRANCH="master"
+LOTTIE_DIR="${START_DIR}/rlottie"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -286,6 +291,22 @@ if [ $BUILD_NFD = true ]; then
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project nativefiledialog-extended.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project nativefiledialog-extended.xcodeproj -destination='Any Mac'
+else
+    echo "Skipping nativefiledialog build"
+fi
+
+#lottie
+if [ $BUILD_LOTTIE = true ]; then
+    echo "building rlottie"
+
+    git clone --branch ${LOTTIE_TARGET_BRANCH} https://github.com/Samsung/rlottie.git ${LOTTIE_DIR}
+    cd ${LOTTIE_DIR}
+    git apply ${SCRIPT_DIR}/lottiePatch.diff
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project rlottie.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project rlottie.xcodeproj -destination='Any Mac'
 else
     echo "Skipping nativefiledialog build"
 fi

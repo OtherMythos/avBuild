@@ -1,0 +1,66 @@
+diff --git a/src/lottie/lottieanimation.cpp b/src/lottie/lottieanimation.cpp
+index afcc400..36423c6 100644
+--- a/src/lottie/lottieanimation.cpp
++++ b/src/lottie/lottieanimation.cpp
+@@ -480,6 +480,7 @@ void lottie_shutdown_impl()
+     lottieShutdownRasterTaskScheduler();
+ }
+ 
++#undef __ARM_NEON__
+ #ifdef LOTTIE_LOGGING_SUPPORT
+ void initLogging()
+ {
+diff --git a/src/lottie/lottieparser.cpp b/src/lottie/lottieparser.cpp
+index b33effa..f7506ca 100644
+--- a/src/lottie/lottieparser.cpp
++++ b/src/lottie/lottieparser.cpp
+@@ -56,6 +56,7 @@
+ #include <array>
+ 
+ #include "lottiemodel.h"
++#define RAPIDJSON_NAMESPACE lottierapidjson
+ #include "rapidjson/document.h"
+ #include "zip/zip.h"
+ 
+@@ -64,7 +65,7 @@ RAPIDJSON_DIAG_PUSH
+ RAPIDJSON_DIAG_OFF(effc++)
+ #endif
+ 
+-using namespace rapidjson;
++using namespace lottierapidjson;
+ 
+ using namespace rlottie::internal;
+ 
+diff --git a/src/vector/vdrawhelper.cpp b/src/vector/vdrawhelper.cpp
+index 41593c8..8c2a538 100644
+--- a/src/vector/vdrawhelper.cpp
++++ b/src/vector/vdrawhelper.cpp
+@@ -754,6 +754,7 @@ void VSpanData::updateSpanFunc()
+     }
+ }
+ 
++#undef __ARM_NEON__
+ #if !defined(__SSE2__) && !defined(__ARM_NEON__)
+ void memfill32(uint32_t *dest, uint32_t value, int length)
+ {
+diff --git a/src/vector/vdrawhelper_common.cpp b/src/vector/vdrawhelper_common.cpp
+index 8a91b0f..b8431f4 100644
+--- a/src/vector/vdrawhelper_common.cpp
++++ b/src/vector/vdrawhelper_common.cpp
+@@ -180,6 +180,7 @@ RenderFuncTable::RenderFuncTable()
+     updateSrc(BlendMode::DestIn, src_DestinationIn);
+     updateSrc(BlendMode::DestOut, src_DestinationOut);
+ 
++#undef __ARM_NEON__
+ #if defined(__ARM_NEON__)
+     neon();
+ #endif
+diff --git a/src/vector/vdrawhelper_neon.cpp b/src/vector/vdrawhelper_neon.cpp
+index 681eabb..d05f3db 100644
+--- a/src/vector/vdrawhelper_neon.cpp
++++ b/src/vector/vdrawhelper_neon.cpp
+@@ -1,3 +1,4 @@
++#undef __ARM_NEON__
+ #if defined(__ARM_NEON__)
+ 
+ #include "vdrawhelper.h"
