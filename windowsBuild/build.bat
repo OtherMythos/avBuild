@@ -21,6 +21,7 @@ SET BUILD_DETOUR=true
 SET BUILD_SDL2=true
 SET BUILD_OPENALSOFT=true
 SET BUILD_NFD=true
+SET BUILD_LOTTIE=true
 SET BUILD_GOOGLETEST=true
 
 SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
@@ -65,6 +66,10 @@ SET "LIBSNDFILE_DIR=%START_DIR%\libsndfile"
 ::nativefiledialog
 SET NFD_TARGET_BRANCH="master"
 SET NFD_DIR="%START_DIR%\nativefiledialog"
+
+::Lottie
+SET "LOTTIE_TARGET_BRANCH=master"
+SET "LOTTIE_DIR=%START_DIR%/rlottie"
 
 SET GOOGLETEST_DIR="%START_DIR%\googletest"
 
@@ -245,6 +250,22 @@ IF %BUILD_SDL2% equ true (
     cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/SDL2 ../..
     cmake --build . %CMAKE_CONFIG_SETTINGS%
     cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+)
+
+::lottie
+IF %BUILD_LOTTIE% equ true (
+    echo "building rlottie"
+
+    git clone --branch %LOTTIE_TARGET_BRANCH% https://github.com/Samsung/rlottie.git %LOTTIE_DIR%
+    cd %LOTTIE_DIR%
+    git apply C:\Users\edward\Documents\avBuild\macBuild\lottiePatch.diff
+    mkdir "build/%CMAKE_BUILD_TYPE%"
+    cd "build/%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DBUILD_SHARED_LIBS=True -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\rlottie -DLIB_INSTALL_DIR=%INSTALL_DIR%\rlottie ../..
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+
+    cp %CMAKE_BUILD_TYPE%\rlottie.dll %INSTALL_DIR%\rlottie\
 )
 
 ::#Clone helper libs that don't directly need compiling.
