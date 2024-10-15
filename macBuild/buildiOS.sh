@@ -74,6 +74,10 @@ OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
 LIBSNDFILE_TARGET_BRANCH="1.1.0"
 LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 
+#Lottie
+LOTTIE_TARGET_BRANCH="master"
+LOTTIE_DIR="${START_DIR}/rlottie"
+
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
 #Start
@@ -113,7 +117,8 @@ if [ $BUILD_OGRE = true ]; then
     -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_SAMPLES2=False \
     -DOGRE_BUILD_RENDERSYSTEM_METAL=1 -DOGRE_USE_BOOST=0 -DOGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DOGRE_UNITY_BUILD=0 -DOGRE_SIMD_NEON=0 -DOGRE_BUILD_TESTS=0 \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
-
+    #Slight hack to remove some macOS frameworks the cmake function was adding.
+    sed -i '' '/FRAMEWORK_SEARCH_PATHS/d' OGRE.xcodeproj/project.pbxproj
     xcodebuild -scheme ALL_BUILD -project OGRE.xcodeproj -destination generic/platform=iOS
 
     #Sooo it seems install is broken when building for ios.
@@ -290,6 +295,23 @@ if [ $BUILD_OPENALSOFT = true ]; then
     xcodebuild -scheme install -project libsndfile.xcodeproj -destination generic/platform=iOS
 else
     echo "Skipping OpenALSoft build"
+fi
+
+#lottie
+if [ $BUILD_LOTTIE = true ]; then
+    echo "building rlottie"
+
+    git clone --branch ${LOTTIE_TARGET_BRANCH} https://github.com/Samsung/rlottie.git ${LOTTIE_DIR}
+    cd ${LOTTIE_DIR}
+    git apply ${SCRIPT_DIR}/lottiePatch.diff
+    sed -i '' '/add_subdirectory(example)/d' CMakeLists.txt
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DLOTTIE_MODULE=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
+    xcodebuild -scheme ALL_BUILD -project rlottie.xcodeproj -destination generic/platform=iOS
+    xcodebuild -scheme install -project rlottie.xcodeproj -destination generic/platform=iOS
+else
+    echo "Skipping nativefiledialog build"
 fi
 
 #googletest
