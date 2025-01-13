@@ -20,6 +20,7 @@ cd linuxBuild
 ./build.sh ~/buildLinux
 ```
 
+
 ### MacOS
 Ensure you have XCode installed along with the apple developer tools.
 As well as this ensure cmake is installed and available on your path.
