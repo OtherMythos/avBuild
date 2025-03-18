@@ -225,7 +225,7 @@ if [ $BUILD_SDL2 = true ]; then
     cd ${SDL2_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE -DSDL_PIPEWIRE=FALSE ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else
