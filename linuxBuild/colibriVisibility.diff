@@ -1,0 +1,13 @@
+diff --git a/include/ColibriGui/Ogre/ColibriOgreRenderable.h b/include/ColibriGui/Ogre/ColibriOgreRenderable.h
+index 3ef5a67..623dd4e 100644
+--- a/include/ColibriGui/Ogre/ColibriOgreRenderable.h
++++ b/include/ColibriGui/Ogre/ColibriOgreRenderable.h
+@@ -19,7 +19,7 @@ namespace Ogre
+ 
+ 		This is an Ogre3D specifc class needed to render the widgets on screen.
+ 	*/
+-	class ColibriOgreRenderable : public MovableObject, public Renderable
++	class __attribute__((visibility("default"))) ColibriOgreRenderable : public MovableObject, public Renderable
+ 	{
+ 	public:
+ 		static VertexArrayObject *createVao( uint32 vertexCount, VaoManager *vaoManager,
