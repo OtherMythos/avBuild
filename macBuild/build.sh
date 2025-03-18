@@ -68,7 +68,7 @@ ENTITYX_TARGET_BRANCH="master"
 ENTITYX_DIR="${START_DIR}/entityx"
 
 #ColibriGUI
-COLIBRI_TARGET_BRANCH="flexibilityFix"
+COLIBRI_TARGET_BRANCH="master"
 COLIBRI_DIR="${START_DIR}/colibri"
 
 #RecastDetour
@@ -187,7 +187,7 @@ fi
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
-    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/edherbert/colibrigui.git ${COLIBRI_DIR}
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
 
     cd ${COLIBRI_DIR}
 

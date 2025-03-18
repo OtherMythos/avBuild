@@ -32,7 +32,7 @@ OGRE_DIR="${START_DIR}/${OGRE_DIR_NAME}"
 OGRE_BIN_DIR="${OGRE_DIR}/build/"
 OGRE_DEPS_DIR="${START_DIR}/ogre-next-deps"
 
-COLIBRI_TARGET_BRANCH="flexibilityFix"
+COLIBRI_TARGET_BRANCH="master"
 COLIBRI_DIR="${START_DIR}/colibri"
 
 BUILD_OGRE=true
@@ -77,7 +77,7 @@ if [ $BUILD_COLIBRI = true ]; then
     #Colibrigui
     echo "building ColibriGUI"
 
-    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/edherbert/colibrigui.git ${COLIBRI_DIR}
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
     cd ${COLIBRI_DIR}
 
     cd Dependencies
