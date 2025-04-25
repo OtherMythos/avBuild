@@ -118,8 +118,8 @@ if [ $BUILD_OGRE = true ]; then
     -DOGRE_BUILD_RENDERSYSTEM_METAL=1 -DOGRE_USE_BOOST=0 -DOGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DOGRE_UNITY_BUILD=0 -DOGRE_SIMD_NEON=0 -DOGRE_BUILD_TESTS=0 \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
     #Slight hack to remove some macOS frameworks the cmake function was adding.
-    sed -i '' '/FRAMEWORK_SEARCH_PATHS/d' OGRE.xcodeproj/project.pbxproj
-    xcodebuild -scheme ALL_BUILD -project OGRE.xcodeproj -destination generic/platform=iOS
+    sed -i '' '/FRAMEWORK_SEARCH_PATHS/d' OGRE-Next.xcodeproj/project.pbxproj
+    xcodebuild -scheme ALL_BUILD -project OGRE-Next.xcodeproj -destination generic/platform=iOS
 
     #Sooo it seems install is broken when building for ios.
     #So I work around it with this. Slightly hacky unfortunately.
