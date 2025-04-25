@@ -1,5 +1,7 @@
 #!/bin/bash -x
 
+CMAKE_EXEC="cmake"
+
 START_DIR="$1"
 if [ -v ${1} ]; then
     echo "Please provide a build directory path."
@@ -98,7 +100,7 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DOGRE_UNITY_BUILD=1 -D OGRE_SIMD_NEON=0 -DOGRE_USE_BOOST=0 -D OGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DCMAKE_CXX_STANDARD=11 ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DOGRE_UNITY_BUILD=1 -D OGRE_SIMD_NEON=0 -DOGRE_USE_BOOST=0 -D OGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DCMAKE_CXX_STANDARD=11 ../..
     xcodebuild -scheme ALL_BUILD -project OGREDEPS.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project OGREDEPS.xcodeproj -destination generic/platform=iOS
 
@@ -114,7 +116,7 @@ if [ $BUILD_OGRE = true ]; then
 
     #cmake ${CMAKE_BUILD_SETTINGS} \
     #-DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
-    cmake -DCMAKE_BUILD_TYPE=Debug -G Xcode \
+    ${CMAKE_EXEC} -DCMAKE_BUILD_TYPE=Debug -G Xcode \
     -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_SAMPLES2=False \
     -DOGRE_BUILD_RENDERSYSTEM_METAL=1 -DOGRE_USE_BOOST=0 -DOGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DOGRE_UNITY_BUILD=0 -DOGRE_SIMD_NEON=0 -DOGRE_BUILD_TESTS=0 \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
@@ -157,7 +159,7 @@ if [ $BUILD_BULLET = true ]; then
     cd ${BULLET_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
         -DBUILD_BULLET_ROBOTICS_EXTRA=False -DBUILD_BULLET_ROBOTICS_GUI_EXTRA=False -DBUILD_BULLET2_DEMOS=False -DBUILD_CPU_DEMOS=False -DBUILD_OPENGL3_DEMOS=False -DBUILD_UNIT_TESTS=False -DBUILD_EXTRAS=False ../..
     xcodebuild -scheme ALL_BUILD -project BULLET_PHYSICS.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project BULLET_PHYSICS.xcodeproj -destination generic/platform=iOS
@@ -174,7 +176,7 @@ if [ $BUILD_SQUIRREL = true ]; then
     cd ${SQUIRREL_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DDISABLE_DYNAMIC=True -DSQ_DISABLE_INTERPRETER=True -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel -DCMAKE_CXX_FLAGS="-DIOS" ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DDISABLE_DYNAMIC=True -DSQ_DISABLE_INTERPRETER=True -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel -DCMAKE_CXX_FLAGS="-DIOS" ../..
 
     xcodebuild -scheme ALL_BUILD -project squirrel.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project squirrel.xcodeproj -destination generic/platform=iOS
@@ -190,7 +192,7 @@ if [ $BUILD_ENTITYX = true ]; then
     cd ${ENTITYX_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DENTITYX_BUILD_TESTING=False -DENTITYX_RUN_BENCHMARKS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DENTITYX_BUILD_TESTING=False -DENTITYX_RUN_BENCHMARKS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
     xcodebuild -scheme ALL_BUILD -project EntityX.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project EntityX.xcodeproj -destination generic/platform=iOS
 else
@@ -216,7 +218,7 @@ if [ $BUILD_COLIBRI = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 to solve some problems with bleeding edge compilers.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DAPPLE_IOS=TRUE -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DAPPLE_IOS=TRUE -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     #Don't build ALL_BUILD as it tries to build a shared zlib which is an issue in ios.
     xcodebuild -scheme ColibriGui -project ColibriGui.xcodeproj -destination generic/platform=iOS
 
@@ -246,7 +248,7 @@ if [ $BUILD_DETOUR = true ]; then
     cd ${DETOUR_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
     xcodebuild -scheme ALL_BUILD -project RecastNavigation.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project RecastNavigation.xcodeproj -destination generic/platform=iOS
 else
@@ -265,7 +267,7 @@ if [ $BUILD_SDL2 = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
 
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
     xcodebuild -scheme ALL_BUILD -project SDL2.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project SDL2.xcodeproj -destination generic/platform=iOS
     #cp -r ${SDL2_DIR}/src/main/ ${INSTALL_DIR}/SDL2/main/
@@ -282,7 +284,7 @@ if [ $BUILD_OPENALSOFT = true ]; then
     cd ${OPENALSOFT_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC -DALSOFT_EXAMPLES=False -DALSOFT_UTILS=False ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC -DALSOFT_EXAMPLES=False -DALSOFT_UTILS=False ../..
     xcodebuild -scheme ALL_BUILD -project OpenAL.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project OpenAL.xcodeproj -destination generic/platform=iOS
 
@@ -291,7 +293,7 @@ if [ $BUILD_OPENALSOFT = true ]; then
     cd ${LIBSNDFILE_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_EXTERNAL_LIBS=False ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_EXTERNAL_LIBS=False ../..
     xcodebuild -scheme sndfile -project libsndfile.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project libsndfile.xcodeproj -destination generic/platform=iOS
 else
@@ -308,7 +310,7 @@ if [ $BUILD_LOTTIE = true ]; then
     sed -i '' '/add_subdirectory(example)/d' CMakeLists.txt
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DLOTTIE_MODULE=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DLOTTIE_MODULE=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
     xcodebuild -scheme ALL_BUILD -project rlottie.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project rlottie.xcodeproj -destination generic/platform=iOS
 else
@@ -322,7 +324,7 @@ fi
     cd ${GOOGLETEST_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
     xcodebuild -scheme ALL_BUILD -project googletest-distribution.xcodeproj -destination generic/platform=iOS
     xcodebuild -scheme install -project googletest-distribution.xcodeproj -destination generic/platform=iOS
 
