@@ -131,8 +131,8 @@ if [ $BUILD_OGRE = true ]; then
     -DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
     ${STATIC_FLAGS} \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
-    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OGRE.xcodeproj -destination='Any Mac'
-    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OGRE.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OGRE-Next.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OGRE-Next.xcodeproj -destination='Any Mac'
 else
     echo "Skipping ogre build"
 fi
