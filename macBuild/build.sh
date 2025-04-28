@@ -2,6 +2,8 @@
 
 #brew install cmake wget
 
+CMAKE_EXEC="cmake"
+
 START_DIR="${1}"
 if [ -z "$1" ]; then
     echo "Please provide a build directory path."
@@ -116,7 +118,7 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
-    cmake ${CMAKE_BUILD_SETTINGS} ${STATIC_FLAGS} -DOGRE_BUILD_SAMPLES2=False -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} ${STATIC_FLAGS} -DOGRE_BUILD_SAMPLES2=False -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DCMAKE_CXX_STANDARD=11 ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OGREDEPS.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OGREDEPS.xcodeproj -destination='Any Mac'
 
@@ -127,7 +129,7 @@ if [ $BUILD_OGRE = true ]; then
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
 
-    cmake ${CMAKE_BUILD_SETTINGS} \
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} \
     -DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
     ${STATIC_FLAGS} \
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
@@ -145,7 +147,7 @@ if [ $BUILD_BULLET = true ]; then
     cd ${BULLET_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
         -DBUILD_BULLET_ROBOTICS_EXTRA=False -DBUILD_BULLET_ROBOTICS_GUI_EXTRA=False -DBUILD_BULLET2_DEMOS=False -DBUILD_CPU_DEMOS=False -DBUILD_OPENGL3_DEMOS=False -DBUILD_UNIT_TESTS=False -DBUILD_EXTRAS=False ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project BULLET_PHYSICS.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project BULLET_PHYSICS.xcodeproj -destination='Any Mac'
@@ -161,7 +163,7 @@ if [ $BUILD_SQUIRREL = true ]; then
     cd ${SQUIRREL_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project squirrel.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project squirrel.xcodeproj -destination='Any Mac'
 else
@@ -176,7 +178,7 @@ if [ $BUILD_ENTITYX = true ]; then
     cd ${ENTITYX_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project EntityX.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project EntityX.xcodeproj -destination='Any Mac'
 else
@@ -204,7 +206,7 @@ if [ $BUILD_COLIBRI = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 to solve some problems with bleeding edge compilers.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project ColibriGui.xcodeproj -destination='Any Mac'
 
     #Custom install for colibrigui, as the cmake install gave me problems.
@@ -233,7 +235,7 @@ if [ $BUILD_DETOUR = true ]; then
     cd ${DETOUR_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project RecastNavigation.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project RecastNavigation.xcodeproj -destination='Any Mac'
 else
@@ -249,7 +251,7 @@ if [ $BUILD_SDL2 = true ]; then
     cd ${SDL2_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project SDL2.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project SDL2.xcodeproj -destination='Any Mac'
 else
@@ -264,7 +266,7 @@ if [ $BUILD_OPENALSOFT = true ]; then
     cd ${OPENALSOFT_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OpenAL.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OpenAL.xcodeproj -destination='Any Mac'
 
@@ -273,7 +275,7 @@ if [ $BUILD_OPENALSOFT = true ]; then
     cd ${LIBSNDFILE_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project libsndfile.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project libsndfile.xcodeproj -destination='Any Mac'
 else
@@ -288,7 +290,7 @@ if [ $BUILD_NFD = true ]; then
     cd ${NFD_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project nativefiledialog-extended.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project nativefiledialog-extended.xcodeproj -destination='Any Mac'
 else
@@ -304,7 +306,7 @@ if [ $BUILD_LOTTIE = true ]; then
     git apply ${SCRIPT_DIR}/lottiePatch.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project rlottie.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project rlottie.xcodeproj -destination='Any Mac'
 else
@@ -318,7 +320,7 @@ fi
     cd ${GOOGLETEST_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project googletest-distribution.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project googletest-distribution.xcodeproj -destination='Any Mac'
 
