@@ -24,6 +24,7 @@ BUILD_COLIBRI=true
 BUILD_DETOUR=true
 BUILD_SDL2=true
 BUILD_OPENALSOFT=true
+BUILD_LOTTIE=true
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
@@ -55,8 +56,7 @@ DETOUR_TARGET_BRANCH="main"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2
-#SDL2_TARGET_BRANCH="release-2.0.22"
-SDL2_TARGET_BRANCH="main"
+SDL2_TARGET_BRANCH="release-2.30.2"
 SDL2_DIR="${START_DIR}/SDL2"
 
 #OpenALSoft
@@ -64,6 +64,10 @@ OPENALSOFT_TARGET_BRANCH="1.22.2"
 OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
 LIBSNDFILE_TARGET_BRANCH="1.1.0"
 LIBSNDFILE_DIR="${START_DIR}/libsndfile"
+
+#Lottie
+LOTTIE_TARGET_BRANCH="master"
+LOTTIE_DIR="${START_DIR}/rlottie"
 
 GOOGLETEST_DIR="${START_DIR}/googletest"
 
@@ -243,11 +247,12 @@ if [ $BUILD_SDL2 = true ]; then
     git apply ${SCRIPT_DIR}/androidIconvDiff.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DANDROID_PLATFORM=33 -DSDL_OPENGLES=FALSE -DSDL_OPENGL=FALSE -DSDL_HID=TRUE -DSDL_HAPTIC=TRUE -DSDL_FILESYSTEM=TRUE -DSDL_AUDIO=FALSE -DSDL_MISC=FALSE -DSDL_SHARED=FALSE ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DANDROID_PLATFORM=33 -DSDL_OPENGLES=FALSE -DSDL_OPENGL=FALSE -DSDL_HID=TRUE -DSDL_HAPTIC=TRUE -DSDL_FILESYSTEM=TRUE -DSDL_SYSTEM_ICONV=FALSE -DSDL_AUDIO=FALSE -DSDL_MISC=FALSE -DSDL_STATIC=TRUE -DSDL_SHARED=FALSE ../..
     make -j${NUM_THREADS} || exit 1
     make install
 
     #These files are used by the android project.
+    rm -rf ${INSTALL_DIR}/SDL2/java
     cp -r ${SDL2_DIR}/android-project/app/src/main/java ${INSTALL_DIR}/SDL2/java
 
 else
@@ -277,6 +282,22 @@ if [ $BUILD_OPENALSOFT = true ]; then
     make install
 else
     echo "Skipping OpenALSoft build"
+fi
+
+#lottie
+if [ $BUILD_LOTTIE = true ]; then
+    echo "building rlottie"
+
+    git clone --branch ${LOTTIE_TARGET_BRANCH} https://github.com/Samsung/rlottie.git ${LOTTIE_DIR}
+    cd ${LOTTIE_DIR}
+    git apply ${SCRIPT_DIR}/../macBuild/lottiePatch.diff
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_POSITION_INDEPENDENT_CODE=True -DBUILD_SHARED_LIBS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
+    make -j${NUM_THREADS} || exit 1
+    make install
+else
+    echo "Skipping lottie build"
 fi
 
 #Clone helper libs that don't directly need compiling.
