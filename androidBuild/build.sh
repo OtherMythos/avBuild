@@ -6,13 +6,22 @@ if [ -v ${1} ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+NDK_LOCATION="$2"
+if [ -v ${2} ]; then
+    echo "Please provide a path to the NDK location."
+    exit 1
+fi
 
-NDK_LOCATION="/avbuild/android-ndk-r25"
+CMAKE_BUILD_TYPE="Debug"
+if [ ${3+x} ]; then
+    CMAKE_BUILD_TYPE=${3}
+    echo "Build type set to '${3}'"
+fi
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 #Variables
 NUM_THREADS=4
-CMAKE_BUILD_TYPE="Debug"
 ANDROID_ABI="arm64-v8a"
 CMAKE_BUILD_SETTINGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DANDROID_ABI=${ANDROID_ABI} -DANDROID_NATIVE_API_LEVEL=24 -DCMAKE_TOOLCHAIN_FILE='${NDK_LOCATION}/build/cmake/android.toolchain.cmake'"
 #Build settings
@@ -105,6 +114,7 @@ if [ $BUILD_OGRE = true ]; then
         -DOGRE_DEPENDENCIES_DIR=${OGRE_DIR}/DependenciesAndroid \
         -DOGRE_SIMD_NEON=OFF \
         -DOGRE_SIMD_SSE2=OFF \
+        -DOGRE_BUILD_SAMPLES2=OFF \
         -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 \
         ../..
     make -j${NUM_THREADS} || exit 1

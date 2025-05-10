@@ -1,0 +1,38 @@
+name: android
+
+on:
+  push:
+    branches: ['master']
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        buildType: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Android NDK r25
+        run: |
+          curl -L -o ndk.zip https://dl.google.com/android/repository/android-ndk-r25-linux.zip
+          unzip -q ndk.zip
+          mv android-ndk-r25 ~/ndk
+
+      - name: Build for Android
+        run: |
+          mkdir -p ~/buildAndroidRelease
+          androidBuild/build.sh ~/buildAndroidRelease ~/ndk ${{ matrix.buildType }}
+
+      - name: Compress Artifacts
+        run: |
+          cd ~/buildAndroidRelease/avBuilt
+          tar -zcvf ~/android-avBuilt-${{ matrix.buildType }}.tar.gz *
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: avBuiltAndroid-${{ matrix.buildType }}.tar.gz
+          path: ~/android-avBuilt-${{ matrix.buildType }}.tar.gz
