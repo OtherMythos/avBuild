@@ -1,0 +1,15 @@
+diff --git a/OgreMain/src/OgreRoot.cpp b/OgreMain/src/OgreRoot.cpp
+index b524f5c3f8..9903fd5e6a 100644
+--- a/OgreMain/src/OgreRoot.cpp
++++ b/OgreMain/src/OgreRoot.cpp
+@@ -172,8 +172,8 @@ namespace Ogre
+             testAbiCookie( *abiCookie );
+ 
+ #if OGRE_PLATFORM == OGRE_PLATFORM_ANDROID
+-        mAndroidLogger = OGRE_NEW AndroidLogListener();
+-        mLogManager->getDefaultLog()->addListener( mAndroidLogger );
++        //mAndroidLogger = OGRE_NEW AndroidLogListener();
++        //mLogManager->getDefaultLog()->addListener( mAndroidLogger );
+ #endif
+ 
+         // Dynamic library manager

@@ -94,6 +94,7 @@ if [ $BUILD_OGRE = true ]; then
 
     cd ${OGRE_DIR}
     git apply ${SCRIPT_DIR}/ogreFix.diff
+    git apply ${SCRIPT_DIR}/ogreLogFix.diff
 
     #Build dependencies first.
     cd ${OGRE_DEPS_DIR}
