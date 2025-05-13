@@ -6,6 +6,7 @@ SET "BUILD_TYPE=%2%"
 echo %START_DIR%
 
 IF "%~1" == "" GOTO NoPath
+IF "%~2" == "" GOTO NoBuildType
 
 SET NUM_THREADS=4
 SET "CMAKE_BUILD_TYPE=%BUILD_TYPE%"
@@ -170,6 +171,7 @@ IF %BUILD_COLIBRI% equ true (
     robocopy "%COLIBRI_DIR%/include/ColibriGui" "%INSTALL_DIR%/colibri/include/ColibriGui" /E
     robocopy "%COLIBRI_DIR%/bin/Data" "%INSTALL_DIR%/colibri/data" /E
     robocopy "%COLIBRI_DIR%/Dependencies" "%INSTALL_DIR%/colibri/dependencies" /E
+    robocopy "%COLIBRI_DIR%/Dependencies/sds_library" "%INSTALL_DIR%/sds_library" /E
     mkdir "%INSTALL_DIR%/colibri/lib64"
     mkdir "%INSTALL_DIR%/colibri/bin"
     for /R %COLIBRI_DIR% %%f in (*.lib) do copy %%f "%INSTALL_DIR%/colibri/lib64"
@@ -281,4 +283,8 @@ exit 0
 
 :NoPath
     echo "Please provide a build directory path."
+exit 0
+
+:NoBuildType
+    echo "Please provide a build type."
 exit 0
