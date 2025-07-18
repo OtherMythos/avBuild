@@ -200,7 +200,8 @@ if [ $BUILD_COLIBRI = true ]; then
     cd ..
 
     cd Dependencies/sds_library
-    git apply ${SCRIPT_DIR}/iosSdsDiff.diff
+    #git apply ${SCRIPT_DIR}/iosSdsDiff.diff
+    cd ..
     mkdir ${INSTALL_DIR}/sds_library
     cp -r sds_library/include ${INSTALL_DIR}/sds_library
     cd ${COLIBRI_DIR}
