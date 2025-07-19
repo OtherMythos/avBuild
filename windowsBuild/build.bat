@@ -260,6 +260,8 @@ IF %BUILD_LOTTIE% equ true (
 
     git clone --branch %LOTTIE_TARGET_BRANCH% https://github.com/Samsung/rlottie.git %LOTTIE_DIR%
     cd %LOTTIE_DIR%
+    ::Note: rLottie introduced a broken build (cringe) for Windows to the master branch, and waiting for a PR to go through.
+    git checkout e3026b1e1a516fff3c22d2b1b9f26ec864f89a82
     git apply C:\Users\edward\Documents\avBuild\macBuild\lottiePatch.diff
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
