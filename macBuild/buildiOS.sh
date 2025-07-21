@@ -101,8 +101,8 @@ if [ $BUILD_OGRE = true ]; then
     cd build/${CMAKE_BUILD_TYPE}
     #Force c++11 because freeimage seems broken in places.
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DOGRE_SIMD_SSE2=0 -DOGRE_BUILD_PLATFORM_APPLE_IOS=1 -DOGREDEPS_BUILD_SHADERC=False -DOGREDEPS_BUILD_REMOTERY=False -DOGREDEPS_BUILD_OPENVR=False -DOGRE_UNITY_BUILD=1 -D OGRE_SIMD_NEON=0 -DOGRE_USE_BOOST=0 -D OGRE_CONFIG_THREAD_PROVIDER=0 -DOGRE_CONFIG_THREADS=0 -DCMAKE_CXX_STANDARD=11 ../..
-    xcodebuild -scheme ALL_BUILD -project OGREDEPS.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project OGREDEPS.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OGREDEPS.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OGREDEPS.xcodeproj -destination generic/platform=iOS
 
     #Build Ogre
     cd ${OGRE_DIR}
@@ -122,7 +122,7 @@ if [ $BUILD_OGRE = true ]; then
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
     #Slight hack to remove some macOS frameworks the cmake function was adding.
     sed -i '' '/FRAMEWORK_SEARCH_PATHS/d' OGRE-Next.xcodeproj/project.pbxproj
-    xcodebuild -scheme ALL_BUILD -project OGRE-Next.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OGRE-Next.xcodeproj -destination generic/platform=iOS
 
     #Sooo it seems install is broken when building for ios.
     #So I work around it with this. Slightly hacky unfortunately.
@@ -161,8 +161,8 @@ if [ $BUILD_BULLET = true ]; then
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bullet3 -DINSTALL_LIBS=True \
         -DBUILD_BULLET_ROBOTICS_EXTRA=False -DBUILD_BULLET_ROBOTICS_GUI_EXTRA=False -DBUILD_BULLET2_DEMOS=False -DBUILD_CPU_DEMOS=False -DBUILD_OPENGL3_DEMOS=False -DBUILD_UNIT_TESTS=False -DBUILD_EXTRAS=False ../..
-    xcodebuild -scheme ALL_BUILD -project BULLET_PHYSICS.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project BULLET_PHYSICS.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project BULLET_PHYSICS.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project BULLET_PHYSICS.xcodeproj -destination generic/platform=iOS
     # -destination generic/platform=ios
 else
     echo "Skipping bullet build"
@@ -178,8 +178,8 @@ if [ $BUILD_SQUIRREL = true ]; then
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DDISABLE_DYNAMIC=True -DSQ_DISABLE_INTERPRETER=True -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/squirrel -DCMAKE_CXX_FLAGS="-DIOS" ../..
 
-    xcodebuild -scheme ALL_BUILD -project squirrel.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project squirrel.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project squirrel.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project squirrel.xcodeproj -destination generic/platform=iOS
 else
     echo "Skipping squirrel build"
 fi
@@ -193,8 +193,8 @@ if [ $BUILD_ENTITYX = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DENTITYX_BUILD_TESTING=False -DENTITYX_BUILD_SHARED=False -DENTITYX_BUILD_TESTING=False -DENTITYX_RUN_BENCHMARKS=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/entityx ../..
-    xcodebuild -scheme ALL_BUILD -project EntityX.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project EntityX.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project EntityX.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project EntityX.xcodeproj -destination generic/platform=iOS
 else
     echo "Skipping entityX build"
 fi
@@ -223,7 +223,7 @@ if [ $BUILD_COLIBRI = true ]; then
     #Force c++11 to solve some problems with bleeding edge compilers.
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DAPPLE_IOS=TRUE -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -std=c++11" ../..
     #Don't build ALL_BUILD as it tries to build a shared zlib which is an issue in ios.
-    xcodebuild -scheme ColibriGui -project ColibriGui.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ColibriGui -project ColibriGui.xcodeproj -destination generic/platform=iOS
 
     #Custom install for colibrigui, as the cmake install gave me problems.
 
@@ -252,8 +252,8 @@ if [ $BUILD_DETOUR = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
-    xcodebuild -scheme ALL_BUILD -project RecastNavigation.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project RecastNavigation.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project RecastNavigation.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project RecastNavigation.xcodeproj -destination generic/platform=iOS
 else
     echo "Skipping RecastDetour build"
 fi
@@ -271,8 +271,8 @@ if [ $BUILD_SDL2 = true ]; then
     cd build/${CMAKE_BUILD_TYPE}
 
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
-    xcodebuild -scheme ALL_BUILD -project SDL2.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project SDL2.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project SDL2.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project SDL2.xcodeproj -destination generic/platform=iOS
     #cp -r ${SDL2_DIR}/src/main/ ${INSTALL_DIR}/SDL2/main/
     cp -r ${SDL2_DIR}/src/ ${INSTALL_DIR}/SDL2/src
 else
@@ -288,8 +288,8 @@ if [ $BUILD_OPENALSOFT = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DLIBTYPE=STATIC -DALSOFT_EXAMPLES=False -DALSOFT_UTILS=False ../..
-    xcodebuild -scheme ALL_BUILD -project OpenAL.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project OpenAL.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OpenAL.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OpenAL.xcodeproj -destination generic/platform=iOS
 
     #libsndfile which is a dependency for audio.
     git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
@@ -297,8 +297,8 @@ if [ $BUILD_OPENALSOFT = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DENABLE_EXTERNAL_LIBS=False ../..
-    xcodebuild -scheme sndfile -project libsndfile.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project libsndfile.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme sndfile -project libsndfile.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project libsndfile.xcodeproj -destination generic/platform=iOS
 else
     echo "Skipping OpenALSoft build"
 fi
@@ -314,8 +314,8 @@ if [ $BUILD_LOTTIE = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DBUILD_SHARED_LIBS=False -DLOTTIE_MODULE=False -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/rlottie -DLIB_INSTALL_DIR=${INSTALL_DIR}/rlottie ../..
-    xcodebuild -scheme ALL_BUILD -project rlottie.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project rlottie.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project rlottie.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project rlottie.xcodeproj -destination generic/platform=iOS
 else
     echo "Skipping nativefiledialog build"
 fi
@@ -328,8 +328,8 @@ fi
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/googletest ../..
-    xcodebuild -scheme ALL_BUILD -project googletest-distribution.xcodeproj -destination generic/platform=iOS
-    xcodebuild -scheme install -project googletest-distribution.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project googletest-distribution.xcodeproj -destination generic/platform=iOS
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project googletest-distribution.xcodeproj -destination generic/platform=iOS
 
 #Clone helper libs that don't directly need compiling.
 cd ${START_DIR}
