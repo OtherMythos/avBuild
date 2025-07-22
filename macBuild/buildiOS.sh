@@ -127,7 +127,7 @@ if [ $BUILD_OGRE = true ]; then
     #Sooo it seems install is broken when building for ios.
     #So I work around it with this. Slightly hacky unfortunately.
     rm -rf ${INSTALL_DIR}/ogre2
-    mkdir ${INSTALL_DIR}/ogre2
+    mkdir -p ${INSTALL_DIR}/ogre2
     cp -r ${OGRE_DIR}/Samples/Media ${INSTALL_DIR}/ogre2
     mkdir -p ${INSTALL_DIR}/ogre2/include/OGRE
     cp -r ${OGRE_DIR}/OgreMain/include/* ${INSTALL_DIR}/ogre2/include/OGRE
