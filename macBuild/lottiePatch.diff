@@ -11,7 +11,7 @@ index afcc400..36423c6 100644
  void initLogging()
  {
 diff --git a/src/lottie/lottieparser.cpp b/src/lottie/lottieparser.cpp
-index b33effa..f7506ca 100644
+index f54c358..12df8f3 100644
 --- a/src/lottie/lottieparser.cpp
 +++ b/src/lottie/lottieparser.cpp
 @@ -56,6 +56,7 @@
@@ -22,8 +22,8 @@ index b33effa..f7506ca 100644
  #include "rapidjson/document.h"
  #include "zip/zip.h"
  
-@@ -64,7 +65,7 @@ RAPIDJSON_DIAG_PUSH
- RAPIDJSON_DIAG_OFF(effc++)
+@@ -74,7 +75,7 @@ RAPIDJSON_DIAG_OFF(effc++)
+ #define PATH_MAX MAX_PATH
  #endif
  
 -using namespace rapidjson;
