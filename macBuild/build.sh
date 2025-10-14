@@ -313,7 +313,7 @@ if [ $BUILD_LOTTIE = true ]; then
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project rlottie.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project rlottie.xcodeproj -destination='Any Mac'
 else
-    echo "Skipping nativefiledialog build"
+    echo "Skipping lottie build"
 fi
 
 #googletest

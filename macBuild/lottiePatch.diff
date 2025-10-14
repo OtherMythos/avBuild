@@ -1,3 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bd2e432..f9b99a3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required( VERSION 3.3 )
++cmake_minimum_required( VERSION 3.5 )
+ 
+ #declare project
+ project( rlottie VERSION 0.2 LANGUAGES C CXX ASM)
 diff --git a/src/lottie/lottieanimation.cpp b/src/lottie/lottieanimation.cpp
 index afcc400..36423c6 100644
 --- a/src/lottie/lottieanimation.cpp
