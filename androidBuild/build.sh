@@ -88,9 +88,9 @@ if [ $BUILD_OGRE = true ]; then
     echo "Building ogre."
 
     #Clone
-    git clone --branch ${OGRE_TARGET_BRANCH} https://github.com/OGRECave/ogre-next ${OGRE_DIR}
+    git clone --branch ${OGRE_TARGET_BRANCH} https://github.com/OGRECave/ogre-next ${OGRE_DIR} || exit 1
     #cd ${OGRE_DIR}
-    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
+    git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR} || exit 1
 
     cd ${OGRE_DIR}
     git apply ${SCRIPT_DIR}/ogreFix.diff
@@ -134,7 +134,7 @@ fi
 if [ $BUILD_BULLET = true ]; then
     echo "building bullet"
 
-    git clone --branch ${BULLET_TARGET_BRANCH} https://github.com/bulletphysics/bullet3.git ${BULLET_DIR}
+    git clone --branch ${BULLET_TARGET_BRANCH} https://github.com/bulletphysics/bullet3.git ${BULLET_DIR} || exit 1
     cd ${BULLET_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
@@ -159,7 +159,7 @@ fi
 if [ $BUILD_SQUIRREL = true ]; then
     echo "building squirrel"
 
-    git clone --branch ${SQUIRREL_TARGET_BRANCH} https://github.com/albertodemichelis/squirrel.git ${SQUIRREL_DIR}
+    git clone --branch ${SQUIRREL_TARGET_BRANCH} https://github.com/albertodemichelis/squirrel.git ${SQUIRREL_DIR} || exit 1
     cd ${SQUIRREL_DIR}
     #git apply /Users/edward/Documents/avBuild/macBuild/iosSquirrelPatch.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
@@ -175,7 +175,7 @@ fi
 if [ $BUILD_ENTITYX = true ]; then
     echo "building entityX"
 
-    git clone --branch ${ENTITYX_TARGET_BRANCH} https://github.com/alecthomas/entityx.git ${ENTITYX_DIR}
+    git clone --branch ${ENTITYX_TARGET_BRANCH} https://github.com/alecthomas/entityx.git ${ENTITYX_DIR} || exit 1
     cd ${ENTITYX_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
@@ -190,7 +190,7 @@ fi
 if [ $BUILD_COLIBRI = true ]; then
     echo "building ColibriGUI"
 
-    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR}
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR} || exit 1
     cd ${COLIBRI_DIR}
 
     cd Dependencies
@@ -235,7 +235,7 @@ fi
 if [ $BUILD_DETOUR = true ]; then
     echo "building RecastDetour"
 
-    git clone --branch ${DETOUR_TARGET_BRANCH} https://github.com/recastnavigation/recastnavigation.git ${DETOUR_DIR}
+    git clone --branch ${DETOUR_TARGET_BRANCH} https://github.com/recastnavigation/recastnavigation.git ${DETOUR_DIR} || exit 1
     cd ${DETOUR_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
@@ -253,7 +253,7 @@ if [ $BUILD_SDL2 = true ]; then
     echo "building SDL2"
     cd $START_DIR
 
-    git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
+    git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR} || exit 1
     cd ${SDL2_DIR}
     git apply ${SCRIPT_DIR}/androidIconvDiff.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
@@ -274,7 +274,7 @@ fi
 if [ $BUILD_OPENALSOFT = true ]; then
     echo "building OpenALSoft"
 
-    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
+    git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR} || exit 1
     cd ${OPENALSOFT_DIR}
     #For static builds to prevent it producing hidden symbols.
     mkdir -p build/${CMAKE_BUILD_TYPE}
@@ -284,7 +284,7 @@ if [ $BUILD_OPENALSOFT = true ]; then
     make install
 
     #libsndfile which is a dependency for audio.
-    git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
+    git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR} || exit 1
     cd ${LIBSNDFILE_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
@@ -299,7 +299,7 @@ fi
 if [ $BUILD_LOTTIE = true ]; then
     echo "building rlottie"
 
-    git clone --branch ${LOTTIE_TARGET_BRANCH} https://github.com/Samsung/rlottie.git ${LOTTIE_DIR}
+    git clone --branch ${LOTTIE_TARGET_BRANCH} https://github.com/Samsung/rlottie.git ${LOTTIE_DIR} || exit 1
     cd ${LOTTIE_DIR}
     git apply ${SCRIPT_DIR}/../macBuild/lottiePatch.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
@@ -313,9 +313,9 @@ fi
 
 #Clone helper libs that don't directly need compiling.
 cd ${START_DIR}
-git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem
-git clone --branch v1.13.0 https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog
-git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
+git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem || exit 1
+git clone --branch v1.13.0 https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog || exit 1
+git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2 || exit 1
 
 #Copy in the rapidjson provided by ogre, not the latest cloned one.
 mkdir -p ${INSTALL_DIR}/rapidjson/include
