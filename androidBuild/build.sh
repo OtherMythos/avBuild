@@ -126,6 +126,12 @@ if [ $BUILD_OGRE = true ]; then
     rm -rf ${OGRE_ANDROID_DEPS}
     mkdir -p ${OGRE_ANDROID_DEPS}
     find ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE} -name "*.a" -type f -exec cp {} ${OGRE_ANDROID_DEPS} \;
+
+    #Copy in the rapidjson provided by ogre, not the latest cloned one.
+    mkdir -p ${INSTALL_DIR}/rapidjson/include
+    cp -r ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps/include/rapidjson ${INSTALL_DIR}/rapidjson/include
+
+    rm -rf ${OGRE_DEPS_DIR}/build/
 else
     echo "Skipping ogre build"
 fi
@@ -316,7 +322,3 @@ cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem || exit 1
 git clone --branch v1.13.0 https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog || exit 1
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2 || exit 1
-
-#Copy in the rapidjson provided by ogre, not the latest cloned one.
-mkdir -p ${INSTALL_DIR}/rapidjson/include
-cp -r ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps/include/rapidjson ${INSTALL_DIR}/rapidjson/include
