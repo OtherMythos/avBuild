@@ -130,11 +130,56 @@ if [ $BUILD_OGRE = true ]; then
     #Copy in the rapidjson provided by ogre, not the latest cloned one.
     mkdir -p ${INSTALL_DIR}/rapidjson/include
     cp -r ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps/include/rapidjson ${INSTALL_DIR}/rapidjson/include
-
-    rm -rf ${OGRE_DEPS_DIR}/build/
 else
     echo "Skipping ogre build"
 fi
+
+#ColibriGUI
+if [ $BUILD_COLIBRI = true ]; then
+    echo "building ColibriGUI"
+
+    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR} || exit 1
+    cd ${COLIBRI_DIR}
+
+    cd Dependencies
+    rm Ogre
+    #Link relative to the build directory, not the container.
+    ln -s ../../${OGRE_DIR_NAME} Ogre
+    cd ..
+
+    cd Dependencies/sds_library
+    #git apply ${SCRIPT_DIR}/../linuxBuild/sds_patch.diff
+    git apply ${SCRIPT_DIR}/androidSdsDiff.diff
+    cd ..
+    mkdir ${INSTALL_DIR}/sds_library
+    cp -r sds_library/include ${INSTALL_DIR}/sds_library
+    cd ${COLIBRI_DIR}
+
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    #Force c++11 to solve some problems with bleeding edge compilers.
+    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DANDROID=TRUE -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" ../..
+    make -j${NUM_THREADS} || exit 1
+
+    #Custom install for colibrigui, as the cmake install gave me problems.
+
+    INSTALL_BASE=${INSTALL_DIR}/colibri
+    rm -rf ${INSTALL_BASE}
+    mkdir ${INSTALL_BASE}
+    mkdir -p ${INSTALL_BASE}/include
+    cp -r ${COLIBRI_DIR}/include/ColibriGui ${INSTALL_BASE}/include/ColibriGui
+    cp -r ${COLIBRI_DIR}/bin/Data ${INSTALL_BASE}/data
+    #Have to specify these flags to prevent the symlink being copied.
+    #This is different from the gnu cp flags because macos uses bsd commands.
+    cp -RH ${COLIBRI_DIR}/Dependencies ${INSTALL_BASE}/dependencies
+    mkdir -p ${INSTALL_BASE}/lib64
+    cd ${COLIBRI_DIR}
+    find . -name "*.a" -type f -exec cp {} ${INSTALL_BASE}/lib64 \;
+else
+    echo "Skipping colibri build"
+fi
+
+rm -rf ${OGRE_DEPS_DIR}/build/
 
 #Bullet
 if [ $BUILD_BULLET = true ]; then
@@ -190,51 +235,6 @@ if [ $BUILD_ENTITYX = true ]; then
     make install
 else
     echo "Skipping entityX build"
-fi
-
-#ColibriGUI
-if [ $BUILD_COLIBRI = true ]; then
-    echo "building ColibriGUI"
-
-    git clone --recurse-submodules --shallow-submodules --branch ${COLIBRI_TARGET_BRANCH} https://github.com/darksylinc/colibrigui.git ${COLIBRI_DIR} || exit 1
-    cd ${COLIBRI_DIR}
-
-    cd Dependencies
-    rm Ogre
-    #Link relative to the build directory, not the container.
-    ln -s ../../${OGRE_DIR_NAME} Ogre
-    cd ..
-
-    cd Dependencies/sds_library
-    #git apply ${SCRIPT_DIR}/../linuxBuild/sds_patch.diff
-    git apply ${SCRIPT_DIR}/androidSdsDiff.diff
-    cd ..
-    mkdir ${INSTALL_DIR}/sds_library
-    cp -r sds_library/include ${INSTALL_DIR}/sds_library
-    cd ${COLIBRI_DIR}
-
-    mkdir -p build/${CMAKE_BUILD_TYPE}
-    cd build/${CMAKE_BUILD_TYPE}
-    #Force c++11 to solve some problems with bleeding edge compilers.
-    cmake ${CMAKE_BUILD_SETTINGS} -DOGRE_SOURCE=${OGRE_DIR} -DOGRE_BINARIES=${OGRE_BIN_DIR} -DANDROID=TRUE -DCOLIBRIGUI_LIB_ONLY=TRUE -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/colibri -DCOLIBRIGUI_FLEXIBILITY_LEVEL=2 -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" ../..
-    make -j${NUM_THREADS} || exit 1
-
-    #Custom install for colibrigui, as the cmake install gave me problems.
-
-    INSTALL_BASE=${INSTALL_DIR}/colibri
-    rm -rf ${INSTALL_BASE}
-    mkdir ${INSTALL_BASE}
-    mkdir -p ${INSTALL_BASE}/include
-    cp -r ${COLIBRI_DIR}/include/ColibriGui ${INSTALL_BASE}/include/ColibriGui
-    cp -r ${COLIBRI_DIR}/bin/Data ${INSTALL_BASE}/data
-    #Have to specify these flags to prevent the symlink being copied.
-    #This is different from the gnu cp flags because macos uses bsd commands.
-    cp -RH ${COLIBRI_DIR}/Dependencies ${INSTALL_BASE}/dependencies
-    mkdir -p ${INSTALL_BASE}/lib64
-    cd ${COLIBRI_DIR}
-    find . -name "*.a" -type f -exec cp {} ${INSTALL_BASE}/lib64 \;
-else
-    echo "Skipping colibri build"
 fi
 
 #RecastDetour
