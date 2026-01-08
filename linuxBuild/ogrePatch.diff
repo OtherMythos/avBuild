@@ -1,0 +1,13 @@
+diff --git a/OgreMain/include/OgreDynLib.h b/OgreMain/include/OgreDynLib.h
+index b72a912dc3..75cf03f1a1 100644
+--- a/OgreMain/include/OgreDynLib.h
++++ b/OgreMain/include/OgreDynLib.h
+@@ -54,7 +54,7 @@ typedef struct HINSTANCE__ *hInstance;
+ #elif OGRE_PLATFORM == OGRE_PLATFORM_LINUX || OGRE_PLATFORM == OGRE_PLATFORM_ANDROID || \
+     OGRE_PLATFORM == OGRE_PLATFORM_EMSCRIPTEN || OGRE_PLATFORM == OGRE_PLATFORM_FREEBSD
+ #    define DYNLIB_HANDLE void *
+-#    define DYNLIB_LOAD( a ) dlopen( a, RTLD_LAZY | RTLD_LOCAL )
++#    define DYNLIB_LOAD( a ) dlopen( a, RTLD_LAZY | RTLD_LOCAL | RTLD_GLOBAL )
+ #    define DYNLIB_GETSYM( a, b ) dlsym( a, b )
+ #    define DYNLIB_UNLOAD( a ) dlclose( a )
+ 
