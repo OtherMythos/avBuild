@@ -155,6 +155,7 @@ IF %BUILD_COLIBRI% equ true (
     echo "building ColibriGUI"
     git clone --recurse-submodules --shallow-submodules --branch %COLIBRI_TARGET_BRANCH% https://github.com/darksylinc/colibrigui.git %COLIBRI_DIR%
     cd %COLIBRI_DIR%
+    git apply %~dp0..\patches\colibriSkinChange.diff
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
     ::Frustrating bodge I do to get colibri to see the rapidjson include

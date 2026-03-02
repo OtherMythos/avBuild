@@ -1,0 +1,43 @@
+diff --git a/src/ColibriGui/ColibriRenderable.cpp b/src/ColibriGui/ColibriRenderable.cpp
+index ea75342..9cea897 100644
+--- a/src/ColibriGui/ColibriRenderable.cpp
++++ b/src/ColibriGui/ColibriRenderable.cpp
+@@ -218,13 +218,11 @@ namespace Colibri
+ 	{
+ 		const StateInformation &stateInfo = m_stateInformation[state];
+ 
+-		const Ogre::Vector2 &pixelToCanvas = m_manager->getCanvasSize() * m_manager->getPixelSize();
+-
+ 		float clipBorders[Borders::NumBorders];
+-		clipBorders[Borders::Left]	= stateInfo.borderSize[Borders::Left] * pixelToCanvas.x;
+-		clipBorders[Borders::Top]	= stateInfo.borderSize[Borders::Top] * pixelToCanvas.y;
+-		clipBorders[Borders::Right]	= stateInfo.borderSize[Borders::Right] * pixelToCanvas.x;
+-		clipBorders[Borders::Bottom]= stateInfo.borderSize[Borders::Bottom] * pixelToCanvas.y;
++		clipBorders[Borders::Left]	= stateInfo.borderSize[Borders::Left];
++		clipBorders[Borders::Top]	= stateInfo.borderSize[Borders::Top];
++		clipBorders[Borders::Right]	= stateInfo.borderSize[Borders::Right];
++		clipBorders[Borders::Bottom]= stateInfo.borderSize[Borders::Bottom];
+ 		setClipBorders( clipBorders );
+ 	}
+ 	//-------------------------------------------------------------------------
+diff --git a/src/ColibriGui/ColibriRenderable.inl b/src/ColibriGui/ColibriRenderable.inl
+index 0c7e4fe..28821bc 100644
+--- a/src/ColibriGui/ColibriRenderable.inl
++++ b/src/ColibriGui/ColibriRenderable.inl
+@@ -171,12 +171,10 @@ namespace Colibri
+ 
+ 			const StateInformation stateInfo = m_stateInformation[m_currentState];
+ 
+-			const Ogre::Vector2 &pixelSize2x = m_manager->getPixelSize2x();
+-
+-			const Ogre::Vector2 borderTopLeft( stateInfo.borderSize[Borders::Left] * pixelSize2x.x,
+-					stateInfo.borderSize[Borders::Top] * pixelSize2x.y );
+-			const Ogre::Vector2 borderBottomRight( stateInfo.borderSize[Borders::Right] * pixelSize2x.x,
+-					stateInfo.borderSize[Borders::Bottom] * pixelSize2x.y );
++			const Ogre::Vector2 borderTopLeft( stateInfo.borderSize[Borders::Left] * invCanvasSize2x.x,
++					stateInfo.borderSize[Borders::Top] * invCanvasSize2x.y );
++			const Ogre::Vector2 borderBottomRight( stateInfo.borderSize[Borders::Right] * invCanvasSize2x.x,
++					stateInfo.borderSize[Borders::Bottom] * invCanvasSize2x.y );
+ 			const Ogre::Vector2 innerTopLeft		= outerTopLeft + borderTopLeft;
+ 			const Ogre::Vector2 innerBottomRight	= outerBottomRight - borderBottomRight;
+ 			TODO_borderRepeatSize;

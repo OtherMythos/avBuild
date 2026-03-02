@@ -181,6 +181,7 @@ if [ $BUILD_COLIBRI = true ]; then
     cp -r sds_library/include ${INSTALL_DIR}/sds_library
     cd ${COLIBRI_DIR}
     git apply ${SCRIPT_DIR}/colibriVisibility.diff
+    git apply ${SCRIPT_DIR}/../patches/colibriSkinChange.diff
 
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
