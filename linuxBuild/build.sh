@@ -264,15 +264,15 @@ fi
 
 #nativefiledialog
 if [ $BUILD_NFD = true ]; then
-    echo "building nativefiledialog"
+    #echo "building nativefiledialog"
 
-    git clone --branch ${NFD_TARGET_BRANCH} https://github.com/btzy/nativefiledialog-extended.git ${NFD_DIR}
-    cd ${NFD_DIR}
-    mkdir -p build/${CMAKE_BUILD_TYPE}
-    cd build/${CMAKE_BUILD_TYPE}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
-    make -j${NUM_THREADS} || exit 1
-    make install
+    #git clone --branch ${NFD_TARGET_BRANCH} https://github.com/btzy/nativefiledialog-extended.git ${NFD_DIR}
+    #cd ${NFD_DIR}
+    #mkdir -p build/${CMAKE_BUILD_TYPE}
+    #cd build/${CMAKE_BUILD_TYPE}
+    #cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
+    #make -j${NUM_THREADS} || exit 1
+    #make install
 else
     echo "Skipping nativefiledialog build"
 fi
