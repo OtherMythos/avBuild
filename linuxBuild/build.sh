@@ -273,6 +273,7 @@ if [ $BUILD_NFD = true ]; then
     #cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/nativefiledialog ../..
     #make -j${NUM_THREADS} || exit 1
     #make install
+    :
 else
     echo "Skipping nativefiledialog build"
 fi
