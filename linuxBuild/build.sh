@@ -56,7 +56,7 @@ COLIBRI_TARGET_BRANCH="master"
 COLIBRI_DIR="${START_DIR}/colibri"
 
 #RecastDetour
-DETOUR_TARGET_BRANCH="main"
+DETOUR_TARGET_BRANCH="1078bfe346d9bb560faa748c8fde2e7aae73a3ab"
 DETOUR_DIR="${START_DIR}/recastdetour"
 
 #SDL2
@@ -208,8 +208,9 @@ fi
 if [ $BUILD_DETOUR = true ]; then
     echo "building RecastDetour"
 
-    git clone --branch ${DETOUR_TARGET_BRANCH} https://github.com/recastnavigation/recastnavigation.git ${DETOUR_DIR}
+    git clone https://github.com/recastnavigation/recastnavigation.git ${DETOUR_DIR}
     cd ${DETOUR_DIR}
+    git checkout ${DETOUR_TARGET_BRANCH}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
     cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/recastdetour -DRECASTNAVIGATION_DEMO=FALSE -DRECASTNAVIGATION_EXAMPLES=FALSE -DRECASTNAVIGATION_TESTS=FALSE ../..
