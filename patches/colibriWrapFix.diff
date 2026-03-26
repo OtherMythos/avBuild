@@ -40,18 +40,6 @@ index fb07184..4842d4d 100644
  					{
  						float caretReturn = nextWord.startCaretPos.y;
  						float wordLength = nextWord.endCaretPos.y - nextWord.startCaretPos.y;
-diff --git a/src/ColibriGui/ColibriWindow.cpp b/src/ColibriGui/ColibriWindow.cpp
-index c860795..6ca490f 100644
---- a/src/ColibriGui/ColibriWindow.cpp
-+++ b/src/ColibriGui/ColibriWindow.cpp
-@@ -15,6 +15,7 @@ namespace Colibri
- 		m_currentScroll( Ogre::Vector2::ZERO ),
- 		m_nextScroll( Ogre::Vector2::ZERO ),
- 		m_scrollableArea( Ogre::Vector2::ZERO ),
-+		m_scrollDisabledThisFrame( false ),
- 		m_defaultChildWidget( 0u ),
- 		m_lastPrimaryAction( std::numeric_limits<uint16_t>::max() ),
- 		m_widgetNavigationDirty( false ),
 diff --git a/src/ColibriGui/Text/ColibriShaper.cpp b/src/ColibriGui/Text/ColibriShaper.cpp
 index d1284c0..1a334df 100644
 --- a/src/ColibriGui/Text/ColibriShaper.cpp
