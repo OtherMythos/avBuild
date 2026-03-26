@@ -1,0 +1,68 @@
+diff --git a/include/ColibriGui/Text/ColibriShaper.h b/include/ColibriGui/Text/ColibriShaper.h
+index dc35fd8..bab5903 100644
+--- a/include/ColibriGui/Text/ColibriShaper.h
++++ b/include/ColibriGui/Text/ColibriShaper.h
+@@ -30,6 +30,7 @@ namespace Colibri
+ 		Ogre::Vector2      caretPos;
+ 		bool               isNewline;
+ 		bool               isWordBreaker;
++		bool               isWhiteSpace;
+ 		bool               isRtl : 1;
+ 		bool               isPrivateArea : 1;
+ 		bool               isTab;
+diff --git a/src/ColibriGui/ColibriLabel.cpp b/src/ColibriGui/ColibriLabel.cpp
+index fb07184..4842d4d 100644
+--- a/src/ColibriGui/ColibriLabel.cpp
++++ b/src/ColibriGui/ColibriLabel.cpp
+@@ -546,9 +546,11 @@ namespace Colibri
+ 					float caretAtEndOfWord =
+ 						nextWord.endCaretPos.x - nextWord.lastAdvance.x + nextWord.lastCharWidth;
+ 					float distBetweenWords = nextWord.endCaretPos.x - nextWord.startCaretPos.x;
++					const ShapedGlyph &firstGlyphH = m_shapes[state][nextWord.offset];
++					const bool isLeadingPunctH = firstGlyphH.isWordBreaker && !firstGlyphH.isWhiteSpace;
+ 					if( caretAtEndOfWord > bottomRight.x &&
+ 						( distBetweenWords <= bottomRight.x || multipleWordsInLine ) &&
+-						!m_shapes[state][nextWord.offset].isNewline )
++						!firstGlyphH.isNewline && !isLeadingPunctH )
+ 					{
+ 						float caretReturn = nextWord.startCaretPos.x;
+ 						float wordLength = nextWord.endCaretPos.x - nextWord.startCaretPos.x;
+@@ -569,9 +571,11 @@ namespace Colibri
+ 					float caretAtEndOfWord =
+ 						nextWord.endCaretPos.y - nextWord.lastAdvance.y + nextWord.lastCharWidth;
+ 					float distBetweenWords = nextWord.endCaretPos.y - nextWord.startCaretPos.y;
++					const ShapedGlyph &firstGlyphV = m_shapes[state][nextWord.offset];
++					const bool isLeadingPunctV = firstGlyphV.isWordBreaker && !firstGlyphV.isWhiteSpace;
+ 					if( caretAtEndOfWord > bottomRight.y &&
+ 						( distBetweenWords <= bottomRight.y || multipleWordsInLine ) &&
+-						!m_shapes[state][nextWord.offset].isNewline )
++						!firstGlyphV.isNewline && !isLeadingPunctV )
+ 					{
+ 						float caretReturn = nextWord.startCaretPos.y;
+ 						float wordLength = nextWord.endCaretPos.y - nextWord.startCaretPos.y;
+diff --git a/src/ColibriGui/ColibriWindow.cpp b/src/ColibriGui/ColibriWindow.cpp
+index c860795..6ca490f 100644
+--- a/src/ColibriGui/ColibriWindow.cpp
++++ b/src/ColibriGui/ColibriWindow.cpp
+@@ -15,6 +15,7 @@ namespace Colibri
+ 		m_currentScroll( Ogre::Vector2::ZERO ),
+ 		m_nextScroll( Ogre::Vector2::ZERO ),
+ 		m_scrollableArea( Ogre::Vector2::ZERO ),
++		m_scrollDisabledThisFrame( false ),
+ 		m_defaultChildWidget( 0u ),
+ 		m_lastPrimaryAction( std::numeric_limits<uint16_t>::max() ),
+ 		m_widgetNavigationDirty( false ),
+diff --git a/src/ColibriGui/Text/ColibriShaper.cpp b/src/ColibriGui/Text/ColibriShaper.cpp
+index d1284c0..1a334df 100644
+--- a/src/ColibriGui/Text/ColibriShaper.cpp
++++ b/src/ColibriGui/Text/ColibriShaper.cpp
+@@ -395,7 +395,8 @@ namespace Colibri
+ 											utf16Str[cluster] == L'.' ||   //
+ 											utf16Str[cluster] == L';' ||   //
+ 											utf16Str[cluster] == L',';
+-
++				shapedGlyph.isWhiteSpace = utf16Str[cluster] == L' ' ||  //
++										   utf16Str[cluster] == L'\t';
+ 				// Ensure whitespace has zero offset, otherwise it messes up Right & Bottom alignment
+ 				if( utf16Str[cluster] == L' ' || utf16Str[cluster] == L'\t' )
+ 					shapedGlyph.offset = Ogre::Vector2::ZERO;
