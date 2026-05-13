@@ -1,0 +1,37 @@
+diff --git a/include/ColibriGui/Text/ColibriShaperManager.h b/include/ColibriGui/Text/ColibriShaperManager.h
+index 16acdb4..de7220c 100644
+--- a/include/ColibriGui/Text/ColibriShaperManager.h
++++ b/include/ColibriGui/Text/ColibriShaperManager.h
+@@ -241,6 +241,13 @@ namespace Colibri
+ 
+ 		void updateGpuBuffers();
+ 
++		/**
++		Call this when the GPU may have lost its buffer contents (e.g. returning from
++		an iOS background transition). Forces a full re-upload of the glyph atlas on
++		the next updateGpuBuffers() call.
++		*/
++		void notifyGpuDataLost();
++
+ 		void prepareToRender();
+ 
+ 		Ogre::HlmsColibri *colibri_nullable getOgreHlms() { return m_hlms; }
+diff --git a/src/ColibriGui/Text/ColibriShaperManager.cpp b/src/ColibriGui/Text/ColibriShaperManager.cpp
+index 1549965..a1a1cb5 100644
+--- a/src/ColibriGui/Text/ColibriShaperManager.cpp
++++ b/src/ColibriGui/Text/ColibriShaperManager.cpp
+@@ -763,6 +763,14 @@ namespace Colibri
+ 		}
+ 	}
+ 	//-------------------------------------------------------------------------
++	void ShaperManager::notifyGpuDataLost()
++	{
++		if(m_offsetPtr > 0u){
++			m_dirtyRanges.clear();
++			m_dirtyRanges.push_back({0, m_offsetPtr});
++		}
++	}
++	//-------------------------------------------------------------------------
+ 	void ShaperManager::prepareToRender() { m_hlms->setGlyphAtlasBuffer( m_glyphAtlasBuffer ); }
+ 	//-------------------------------------------------------------------------
+ 	const char* ShaperManager::getErrorMessage( FT_Error errorCode )

@@ -157,6 +157,7 @@ IF %BUILD_COLIBRI% equ true (
     cd %COLIBRI_DIR%
     git apply %~dp0..\patches\colibriSkinChange.diff
     git apply %~dp0..\patches\colibriScrollChange.diff
+    git apply %~dp0..\patches\colibriGlyphRefresh.diff
     git apply %~dp0..\patches\colibriWrapFix.diff
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
