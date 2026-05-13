@@ -1,0 +1,264 @@
+diff --git a/include/ColibriGui/ColibriManager.h b/include/ColibriGui/ColibriManager.h
+index b2fc4d6..6c0855e 100644
+--- a/include/ColibriGui/ColibriManager.h
++++ b/include/ColibriGui/ColibriManager.h
+@@ -255,6 +255,18 @@ namespace Colibri
+ 		bool			m_mouseCursorButtonDown;
+ 		Ogre::Vector2	m_scrollHappened;
+ 		Ogre::Vector2	m_mouseCursorPosNdc; ///NDC = Normalized Device Coordinates
++
++		//Velocity tracking for momentum (inertial) scroll after flick gestures
++		struct ScrollVelocitySample
++		{
++			Ogre::Vector2 delta;  ///< Canvas-space scroll delta for this frame
++			float         dt;     ///< Frame duration in seconds
++		};
++		static const uint32_t c_numScrollVelocitySamples = 5u;
++		ScrollVelocitySample  m_scrollVelocitySamples[c_numScrollVelocitySamples];
++		uint32_t              m_scrollVelocitySampleIdx;
++		Ogre::Vector2         m_scrollDeltaAccum;  ///< Accumulated scroll delta between update() calls
++		float                 m_lastUpdateDt;      ///< dt from the most recent update() call
+ 		bool			m_primaryButtonDown;
+ 		Borders::Borders m_keyDirDown;
+ 		float			m_keyRepeatWaitTimer;
+diff --git a/include/ColibriGui/ColibriWindow.h b/include/ColibriGui/ColibriWindow.h
+index dfa7537..1ee11b1 100644
+--- a/include/ColibriGui/ColibriWindow.h
++++ b/include/ColibriGui/ColibriWindow.h
+@@ -23,6 +23,8 @@ namespace Colibri
+ 		/// For smooth scrolling, m_nextScroll contains the scroll destination,
+ 		/// eventually over time m_currentScroll = m_nextScroll.
+ 		Ogre::Vector2 m_nextScroll;
++		/// Inertial momentum velocity in canvas units/second. Applied each frame and decays with friction.
++		Ogre::Vector2 m_scrollVelocity;
+ 		Ogre::Vector2 m_scrollableArea;
+ 
+ 		/// In range [0; m_windowsStart)
+@@ -95,7 +97,15 @@ namespace Colibri
+ 		void setScrollAnimated( const Ogre::Vector2 &nextScroll, bool animateOutOfRange );
+ 		/// Immediately sets the scroll to the input destination.
+ 		/// If the input is outside the range [0; m_maxScroll], it will be clamped.
++		/// Also clears any active scroll momentum.
+ 		void setScrollImmediate( const Ogre::Vector2 &scroll );
++
++		/// Sets the inertial scroll velocity (canvas units/second) to kick off momentum scrolling.
++		/// Called after a flick gesture is released.
++		void setScrollVelocity( const Ogre::Vector2 &velocity );
++
++		/// Stops any in-progress momentum scroll immediately.
++		void stopScrollMomentum();
+ 		/// Return the current scroll position. Note that it may not be the final one,
+ 		/// if it's still animating.
+ 		/// To get the final scroll to achieve once animation finishes, use getNextScroll
+diff --git a/src/ColibriGui/ColibriManager.cpp b/src/ColibriGui/ColibriManager.cpp
+index 1b1c62d..7ffbc1c 100644
+--- a/src/ColibriGui/ColibriManager.cpp
++++ b/src/ColibriGui/ColibriManager.cpp
+@@ -74,6 +74,9 @@ namespace Colibri
+ 		m_mouseCursorButtonDown( false ),
+ 		m_scrollHappened( Ogre::Vector2::ZERO ),
+ 		m_mouseCursorPosNdc( Ogre::Vector2( -2.0f, -2.0f ) ),
++		m_scrollVelocitySampleIdx( 0u ),
++		m_scrollDeltaAccum( Ogre::Vector2::ZERO ),
++		m_lastUpdateDt( 0.016f ),
+ 		m_primaryButtonDown( false ),
+ 		m_keyDirDown( Borders::NumBorders ),
+ 		m_keyRepeatWaitTimer( 0.0f ),
+@@ -99,6 +102,7 @@ namespace Colibri
+ 	{
+ 		memset( m_defaultTextDatablock, 0, sizeof(m_defaultTextDatablock) );
+ 		memset( m_defaultSkins, 0, sizeof(m_defaultSkins) );
++		memset( m_scrollVelocitySamples, 0, sizeof(m_scrollVelocitySamples) );
+ 
+ 		setLogListener( logListener );
+ 		setColibriListener( colibriListener );
+@@ -497,7 +501,9 @@ namespace Colibri
+ 			( m_allowingScrollAlways ||
+ 			  ( m_cursorFocusedPair.window && m_cursorFocusedPair.window->hasScroll() ) ) )
+ 		{
+-			bool scrollConsumed = setScroll( ( oldPos - m_mouseCursorPosNdc ) * 0.5f * m_canvasSize );
++			const Ogre::Vector2 rawDelta = ( oldPos - m_mouseCursorPosNdc ) * 0.5f * m_canvasSize;
++			m_scrollDeltaAccum += rawDelta;
++			bool scrollConsumed = setScroll( rawDelta );
+ 			//^^ setScroll will call updateWidgetsFocusedByCursor if necessary
+ 
+ 			if( !scrollConsumed )
+@@ -515,6 +521,13 @@ namespace Colibri
+ 	//-------------------------------------------------------------------------
+ 	void ColibriManager::setMouseCursorPressed( bool allowScrollGesture, bool alwaysAllowScroll )
+ 	{
++		//Stop any momentum on touch-down so the new gesture starts fresh
++		if( m_cursorFocusedPair.window )
++			m_cursorFocusedPair.window->stopScrollMomentum();
++		memset( m_scrollVelocitySamples, 0, sizeof(m_scrollVelocitySamples) );
++		m_scrollVelocitySampleIdx = 0u;
++		m_scrollDeltaAccum = Ogre::Vector2::ZERO;
++
+ 		if( m_cursorFocusedPair.widget )
+ 		{
+ 			// This call may end up calling m_cursorFocusedPair.widget->getParent()->setState(),
+@@ -550,6 +563,39 @@ namespace Colibri
+ 		// Use a threshold because fingers in touch devices can cause a small accidental scroll
+ 		const Ogre::Vector2 scrollThreshold = m_canvasSize * 0.03f;
+ 
++		//Apply momentum scroll if the gesture was a real flick (past threshold)
++		if( m_allowingScrollGestureWhileButtonDown && m_cursorFocusedPair.window &&
++			m_scrollHappened.squaredLength() > scrollThreshold.squaredLength() )
++		{
++			//Flush any delta that arrived since the last update() call
++			if( m_scrollDeltaAccum.x != 0.0f || m_scrollDeltaAccum.y != 0.0f )
++			{
++				m_scrollVelocitySamples[m_scrollVelocitySampleIdx] = { m_scrollDeltaAccum,
++				                                                        m_lastUpdateDt };
++				m_scrollVelocitySampleIdx =
++					( m_scrollVelocitySampleIdx + 1u ) % c_numScrollVelocitySamples;
++			}
++
++			//Compute average velocity over recent samples
++			Ogre::Vector2 deltaSum = Ogre::Vector2::ZERO;
++			float timeSum = 0.0f;
++			for( uint32_t i = 0u; i < c_numScrollVelocitySamples; ++i )
++			{
++				if( m_scrollVelocitySamples[i].dt > 0.0f )
++				{
++					deltaSum += m_scrollVelocitySamples[i].delta;
++					timeSum += m_scrollVelocitySamples[i].dt;
++				}
++			}
++			if( timeSum > 0.0f )
++				m_cursorFocusedPair.window->setScrollVelocity( deltaSum / timeSum );
++		}
++
++		//Reset velocity tracking state
++		memset( m_scrollVelocitySamples, 0, sizeof(m_scrollVelocitySamples) );
++		m_scrollVelocitySampleIdx = 0u;
++		m_scrollDeltaAccum = Ogre::Vector2::ZERO;
++
+ 		if( m_cursorFocusedPair.widget &&
+ 			m_scrollHappened.squaredLength() <= scrollThreshold.squaredLength() )
+ 		{
+@@ -802,20 +848,27 @@ namespace Colibri
+ 			}
+ 
+ 			const Ogre::Vector2 oldNextScroll = window->getNextScroll();
++			const Ogre::Vector2 maxScroll = window->getMaxScroll();
++
++			//Rubber-band resistance: reduce delta when already dragged past bounds (iOS-style)
++			Ogre::Vector2 resistedAmount = scrollAmount;
++			if( maxScroll.x > 0.0f && ( oldNextScroll.x < 0.0f || oldNextScroll.x > maxScroll.x ) )
++				resistedAmount.x *= 0.35f;
++			if( maxScroll.y > 0.0f && ( oldNextScroll.y < 0.0f || oldNextScroll.y > maxScroll.y ) )
++				resistedAmount.y *= 0.35f;
+ 
+ 			if( animated )
+ 			{
+-				window->setScrollAnimated( oldNextScroll + scrollAmount, true );
++				window->setScrollAnimated( oldNextScroll + resistedAmount, true );
+ 			}
+ 			else
+ 			{
+-				window->setScrollImmediate( oldNextScroll + scrollAmount );
++				window->setScrollImmediate( oldNextScroll + resistedAmount );
+ 			}
+ 
+ 			if( window->hasScroll() )
+ 			{
+ 				Ogre::Vector2 nextScroll = window->getNextScroll();
+-				const Ogre::Vector2 maxScroll = window->getMaxScroll();
+ 				nextScroll.makeFloor( maxScroll );
+ 				nextScroll.makeCeil( Ogre::Vector2::ZERO );
+ 
+@@ -1592,6 +1645,17 @@ namespace Colibri
+ 			m_lastFrameIdxUpdated = m_vaoManager->getFrameCount();
+ 		}
+ 
++		m_lastUpdateDt = timeSinceLast;
++
++		//Record a scroll velocity sample if the user was dragging this frame
++		if( m_allowingScrollGestureWhileButtonDown &&
++			( m_scrollDeltaAccum.x != 0.0f || m_scrollDeltaAccum.y != 0.0f ) )
++		{
++			m_scrollVelocitySamples[m_scrollVelocitySampleIdx] = { m_scrollDeltaAccum, timeSinceLast };
++			m_scrollVelocitySampleIdx = ( m_scrollVelocitySampleIdx + 1u ) % c_numScrollVelocitySamples;
++		}
++		m_scrollDeltaAccum = Ogre::Vector2::ZERO;
++
+ 		updateAllDerivedTransforms();
+ 
+ 		//_setTextSpecialKey must be called before autosetNavigation
+diff --git a/src/ColibriGui/ColibriWindow.cpp b/src/ColibriGui/ColibriWindow.cpp
+index c860795..56c21d6 100644
+--- a/src/ColibriGui/ColibriWindow.cpp
++++ b/src/ColibriGui/ColibriWindow.cpp
+@@ -14,6 +14,7 @@ namespace Colibri
+ 		Renderable( manager ),
+ 		m_currentScroll( Ogre::Vector2::ZERO ),
+ 		m_nextScroll( Ogre::Vector2::ZERO ),
++		m_scrollVelocity( Ogre::Vector2::ZERO ),
+ 		m_scrollableArea( Ogre::Vector2::ZERO ),
+ 		m_defaultChildWidget( 0u ),
+ 		m_lastPrimaryAction( std::numeric_limits<uint16_t>::max() ),
+@@ -280,6 +281,22 @@ namespace Colibri
+ 		m_currentScroll.makeFloor( maxScroll );
+ 		m_currentScroll.makeCeil( Ogre::Vector2::ZERO );
+ 		m_nextScroll = m_currentScroll;
++		m_scrollVelocity = Ogre::Vector2::ZERO;
++	}
++	//-------------------------------------------------------------------------
++	void Window::setScrollVelocity( const Ogre::Vector2 &velocity )
++	{
++		m_scrollVelocity = velocity;
++		//Don't allow momentum on axes that this window can't scroll
++		if( !hasScrollX() )
++			m_scrollVelocity.x = 0.0f;
++		if( !hasScrollY() )
++			m_scrollVelocity.y = 0.0f;
++	}
++	//-------------------------------------------------------------------------
++	void Window::stopScrollMomentum()
++	{
++		m_scrollVelocity = Ogre::Vector2::ZERO;
+ 	}
+ 	//-------------------------------------------------------------------------
+ 	void Window::setMaxScroll( const Ogre::Vector2 &maxScroll )
+@@ -337,6 +354,40 @@ namespace Colibri
+ 
+ 		const Ogre::Vector2 maxScroll = getMaxScroll();
+ 
++		//Apply inertial momentum (iOS-style flick scrolling)
++		if( m_scrollVelocity.x != 0.0f || m_scrollVelocity.y != 0.0f )
++		{
++			m_nextScroll += m_scrollVelocity * timeSinceLast;
++
++			//iOS normal deceleration rate (~0.998 per ms)
++			const float friction = exp2f( -2.89f * timeSinceLast );
++			m_scrollVelocity *= friction;
++
++			//Extra braking when overscrolled past bounds so the bounce-back wins
++			if( m_nextScroll.x < 0.0f || m_nextScroll.x > maxScroll.x )
++				m_scrollVelocity.x *= exp2f( -10.0f * timeSinceLast );
++			if( m_nextScroll.y < 0.0f || m_nextScroll.y > maxScroll.y )
++				m_scrollVelocity.y *= exp2f( -10.0f * timeSinceLast );
++
++			//Kill velocity once below ~1 pixel per frame at 60 fps (imperceptible motion)
++			if( std::abs( m_scrollVelocity.x ) < pixelSize.x * 60.0f )
++				m_scrollVelocity.x = 0.0f;
++			if( std::abs( m_scrollVelocity.y ) < pixelSize.y * 60.0f )
++				m_scrollVelocity.y = 0.0f;
++
++			//Clamp non-scrollable axes immediately; don't let them drift even transiently
++			if( !hasScrollX() )
++			{
++				m_scrollVelocity.x = 0.0f;
++				m_nextScroll.x = 0.0f;
++			}
++			if( !hasScrollY() )
++			{
++				m_scrollVelocity.y = 0.0f;
++				m_nextScroll.y = 0.0f;
++			}
++		}
++
+ 		if( m_nextScroll.y < 0.0f )
+ 		{
+ 			m_nextScroll.y = Ogre::Math::lerp( 0.0f, m_nextScroll.y, exp2f( -15.0f * timeSinceLast ) );
