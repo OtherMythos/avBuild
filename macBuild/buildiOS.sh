@@ -271,7 +271,6 @@ if [ $BUILD_SDL2 = true ]; then
 
     git clone --branch ${SDL2_TARGET_BRANCH} https://github.com/libsdl-org/SDL.git ${SDL2_DIR}
     cd ${SDL2_DIR}
-    git apply ${SCRIPT_DIR}/iosDiff.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
 
