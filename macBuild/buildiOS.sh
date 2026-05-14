@@ -274,7 +274,7 @@ if [ $BUILD_SDL2 = true ]; then
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
 
-    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/SDL2 -DSDL_SHARED=FALSE -DSDL_HIDAPI=OFF ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project SDL2.xcodeproj -destination generic/platform=iOS
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project SDL2.xcodeproj -destination generic/platform=iOS
     #cp -r ${SDL2_DIR}/src/main/ ${INSTALL_DIR}/SDL2/main/
