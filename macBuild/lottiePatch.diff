@@ -21,18 +21,18 @@ index afcc400..36423c6 100644
  void initLogging()
  {
 diff --git a/src/lottie/lottieparser.cpp b/src/lottie/lottieparser.cpp
-index f54c358..12df8f3 100644
+index 1a18dc8..46a7ee6 100644
 --- a/src/lottie/lottieparser.cpp
 +++ b/src/lottie/lottieparser.cpp
-@@ -56,6 +56,7 @@
- #include <array>
+@@ -58,6 +58,7 @@
+ #include <unordered_set>
  
  #include "lottiemodel.h"
 +#define RAPIDJSON_NAMESPACE lottierapidjson
  #include "rapidjson/document.h"
  #include "zip/zip.h"
  
-@@ -74,7 +75,7 @@ RAPIDJSON_DIAG_OFF(effc++)
+@@ -76,7 +77,7 @@ RAPIDJSON_DIAG_OFF(effc++)
  #define PATH_MAX MAX_PATH
  #endif
  
@@ -42,10 +42,10 @@ index f54c358..12df8f3 100644
  using namespace rlottie::internal;
  
 diff --git a/src/vector/vdrawhelper.cpp b/src/vector/vdrawhelper.cpp
-index 41593c8..8c2a538 100644
+index b8cb632..438c0bb 100644
 --- a/src/vector/vdrawhelper.cpp
 +++ b/src/vector/vdrawhelper.cpp
-@@ -754,6 +754,7 @@ void VSpanData::updateSpanFunc()
+@@ -759,6 +759,7 @@ void VSpanData::updateSpanFunc()
      }
  }
  
