@@ -339,6 +339,8 @@ git clone --branch v1.13.0 https://github.com/gabime/spdlog.git ${INSTALL_DIR}/s
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2
 git clone https://github.com/ocornut/imgui.git ${INSTALL_DIR}/imgui
 git clone https://github.com/edherbert/ogre-next-imgui.git ${INSTALL_DIR}/ogre-next-imgui
+git clone --branch v0.15.3 https://github.com/yhirose/cpp-httplib.git ${INSTALL_DIR}/cpp-httplib
+git clone https://github.com/nothings/stb.git ${INSTALL_DIR}/stb
 
 #Copy in the rapidjson provided by ogre, not the latest cloned one.
 mkdir -p ${INSTALL_DIR}/rapidjson/include

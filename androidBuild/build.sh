@@ -327,3 +327,5 @@ cd ${START_DIR}
 git clone https://github.com/wjakob/filesystem.git ${INSTALL_DIR}/filesystem || exit 1
 git clone --branch v1.13.0 https://github.com/gabime/spdlog.git ${INSTALL_DIR}/spdlog || exit 1
 git clone https://github.com/leethomason/tinyxml2.git ${INSTALL_DIR}/tinyxml2 || exit 1
+git clone --branch v0.15.3 https://github.com/yhirose/cpp-httplib.git ${INSTALL_DIR}/cpp-httplib || exit 1
+git clone https://github.com/nothings/stb.git ${INSTALL_DIR}/stb || exit 1
