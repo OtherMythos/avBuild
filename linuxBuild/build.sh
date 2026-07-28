@@ -106,7 +106,14 @@ if [ $BUILD_OGRE = true ]; then
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 ../..
+    #OGRE_VULKAN_WINDOW_NULL and OGRE_GLSUPPORT_USE_EGL_HEADLESS give the engine's
+    #--headless mode a render system that needs no display server at all. Note the EGL one
+    #is a cmake_dependent_option on EGL_FOUND, so it silently stays FALSE without the EGL
+    #dev headers; check CMakeCache.txt if headless falls back to a hidden GLX window.
+    #Deliberately NOT setting OGRE_CONFIG_UNIX_NO_X11: that would disable GLX and XCB, and
+    #two interfaces have to be compiled in for the headless one to be selectable at runtime.
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 \
+        -DOGRE_VULKAN_WINDOW_NULL=ON -DOGRE_GLSUPPORT_USE_EGL_HEADLESS=ON ../..
     make -j${NUM_THREADS} || exit 1
     make install
 else

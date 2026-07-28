@@ -1,0 +1,294 @@
+diff --git a/RenderSystems/Metal/include/OgreMetalWindowNull.h b/RenderSystems/Metal/include/OgreMetalWindowNull.h
+new file mode 100644
+index 0000000000..108ffc89ce
+--- /dev/null
++++ b/RenderSystems/Metal/include/OgreMetalWindowNull.h
+@@ -0,0 +1,83 @@
++/*
++-----------------------------------------------------------------------------
++This source file is part of OGRE-Next
++    (Object-oriented Graphics Rendering Engine)
++For the latest info, see http://www.ogre3d.org/
++
++Copyright (c) 2000-2016 Torus Knot Software Ltd
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in
++all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++THE SOFTWARE.
++-----------------------------------------------------------------------------
++*/
++#ifndef _OgreMetalWindowNull_H_
++#define _OgreMetalWindowNull_H_
++
++#include "OgreMetalPrerequisites.h"
++
++#include "OgreWindow.h"
++
++namespace Ogre
++{
++    /** A Window that owns no NSWindow, no OgreMetalView and no CAMetalLayer.
++
++        Selected with miscParams["windowType"] = "null". It exists purely so that
++        MetalRenderSystem can complete its one time initialisation (device, capabilities,
++        VaoManager, TextureGpuManager) and so that Root creates the CompositorManager2,
++        both of which only happen inside _createRenderWindow. None of that work touches a
++        window, so on a machine with no WindowServer session this is enough to bring a real
++        Metal render system up headlessly.
++
++        Its texture is a plain MetalTextureGpuRenderTarget, deliberately *not* flagged
++        RenderWindowSpecific, so MetalRenderPassDescriptor::performLoadActions never tries
++        to acquire a CAMetalDrawable for it. Rendering is expected to target the caller's
++        own textures rather than this one.
++
++        Mirrors VulkanWindowNull.
++    */
++    class _OgreMetalExport MetalWindowNull final : public Window
++    {
++        bool         mClosed;
++        bool         mHwGamma;
++        MetalDevice *mDevice;
++
++    public:
++        MetalWindowNull( const String &title, uint32 width, uint32 height, bool fullscreenMode,
++                         const NameValuePairList *miscParams, MetalDevice *ownerDevice );
++        ~MetalWindowNull() override;
++
++        void destroy() override;
++
++        void _initialize( TextureGpuManager *textureGpuManager ) override;
++
++        void reposition( int32 leftPt, int32 topPt ) override;
++        void requestResolution( uint32 widthPt, uint32 heightPt ) override;
++
++        bool isClosed() const override;
++        void _setVisible( bool visible ) override;
++        bool isVisible() const override;
++        void setHidden( bool hidden ) override;
++        bool isHidden() const override;
++
++        void swapBuffers() override;
++
++        void getCustomAttribute( IdString name, void *pData ) override;
++    };
++}  // namespace Ogre
++
++#endif
+diff --git a/RenderSystems/Metal/src/OgreMetalRenderSystem.mm b/RenderSystems/Metal/src/OgreMetalRenderSystem.mm
+index 4d37423f0d..c8e9305ac3 100644
+--- a/RenderSystems/Metal/src/OgreMetalRenderSystem.mm
++++ b/RenderSystems/Metal/src/OgreMetalRenderSystem.mm
+@@ -46,6 +46,7 @@ of this software and associated documentation files (the "Software"), to deal
+ #include "OgreMetalTextureGpu.h"
+ #include "OgreMetalTextureGpuManager.h"
+ #include "OgreMetalWindow.h"
++#include "OgreMetalWindowNull.h"
+ #include "OgreViewport.h"
+ #include "Vao/OgreIndirectBufferPacked.h"
+ #include "Vao/OgreMetalBufferInterface.h"
+@@ -597,7 +598,25 @@ of this software and associated documentation files (the "Software"), to deal
+             mInitialized = true;
+         }
+ 
+-        Window *win = OGRE_NEW MetalWindow( name, width, height, fullScreen, miscParams, &mDevice );
++        String windowType;
++        if( miscParams )
++        {
++            NameValuePairList::const_iterator opt = miscParams->find( "windowType" );
++            if( opt != miscParams->end() )
++                windowType = opt->second;
++        }
++
++        Window *win;
++        if( windowType == "null" )
++        {
++            // Headless: no NSWindow, no OgreMetalView, no CAMetalLayer. Everything above
++            // already ran without needing a window at all.
++            win = OGRE_NEW MetalWindowNull( name, width, height, fullScreen, miscParams, &mDevice );
++        }
++        else
++        {
++            win = OGRE_NEW MetalWindow( name, width, height, fullScreen, miscParams, &mDevice );
++        }
+         mWindows.insert( win );
+ 
+         win->_initialize( mTextureGpuManager );
+diff --git a/RenderSystems/Metal/src/OgreMetalWindowNull.mm b/RenderSystems/Metal/src/OgreMetalWindowNull.mm
+new file mode 100644
+index 0000000000..754cf87fae
+--- /dev/null
++++ b/RenderSystems/Metal/src/OgreMetalWindowNull.mm
+@@ -0,0 +1,160 @@
++/*
++-----------------------------------------------------------------------------
++This source file is part of OGRE-Next
++    (Object-oriented Graphics Rendering Engine)
++For the latest info, see http://www.ogre3d.org/
++
++Copyright (c) 2000-2016 Torus Knot Software Ltd
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in
++all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++THE SOFTWARE.
++-----------------------------------------------------------------------------
++*/
++
++#include "OgreMetalWindowNull.h"
++
++#include "OgreDepthBuffer.h"
++#include "OgreMetalDevice.h"
++#include "OgreMetalTextureGpu.h"
++#include "OgreMetalTextureGpuManager.h"
++#include "OgreRenderSystem.h"
++#include "OgreStringConverter.h"
++
++namespace Ogre
++{
++    MetalWindowNull::MetalWindowNull( const String &title, uint32 width, uint32 height,
++                                      bool fullscreenMode, const NameValuePairList *miscParams,
++                                      MetalDevice *ownerDevice ) :
++        Window( title, width, height, fullscreenMode ),
++        mClosed( false ),
++        mHwGamma( true ),
++        mDevice( ownerDevice )
++    {
++        if( miscParams )
++        {
++            NameValuePairList::const_iterator opt;
++            NameValuePairList::const_iterator endt = miscParams->end();
++
++            opt = miscParams->find( "FSAA" );
++            if( opt != endt )
++                mRequestedSampleDescription.parseString( opt->second );
++
++            opt = miscParams->find( "gamma" );
++            if( opt != endt )
++                mHwGamma = StringConverter::parseBool( opt->second );
++        }
++    }
++    //-------------------------------------------------------------------------
++    MetalWindowNull::~MetalWindowNull() { destroy(); }
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::destroy()
++    {
++        mClosed = true;
++
++        // The base Window does not own these.
++        if( mTexture )
++        {
++            mTexture->notifyAllListenersTextureChanged( TextureGpuListener::Deleted );
++            OGRE_DELETE mTexture;
++            mTexture = 0;
++        }
++        mDepthBuffer = 0;
++        mStencilBuffer = 0;
++    }
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::_initialize( TextureGpuManager *textureGpuManager )
++    {
++        MetalTextureGpuManager *textureManager =
++            static_cast<MetalTextureGpuManager *>( textureGpuManager );
++
++        setFinalResolution( mRequestedWidth, mRequestedHeight );
++
++        // A plain MetalTextureGpuRenderTarget rather than a MetalTextureGpuWindow, since
++        // there is no CAMetalDrawable to hand out.
++        //
++        // RenderWindowSpecific is required even so: RenderSystem::shutdown() calls
++        // _resetTextureManager() on every window's texture before deleting the window, and
++        // MetalTextureGpu::_setToDisplayDummyTexture() asserts that a texture with no manager
++        // is window specific. MetalTextureGpuManager::createWindowDepthBuffer() flags a plain
++        // render target the same way for the same reason.
++        //
++        // The flag also makes MetalRenderPassDescriptor::performLoadActions static_cast a
++        // colour attachment to MetalTextureGpuWindow to acquire a drawable, which would be
++        // wrong here. That path is unreachable because this texture is never attached to a
++        // workspace: a null window exists only to bootstrap the render system, and callers
++        // are expected to render into their own textures.
++        mTexture = OGRE_NEW MetalTextureGpuRenderTarget(
++            GpuPageOutStrategy::Discard, textureManager->getVaoManager(), "RenderWindow",
++            TextureFlags::NotTexture | TextureFlags::RenderToTexture |
++                TextureFlags::RenderWindowSpecific | TextureFlags::DiscardableContent,
++            TextureTypes::Type2D, textureManager );
++
++        // No window depth buffer. MetalTextureGpuManager::createWindowDepthBuffer() tags its
++        // texture RenderWindowSpecific, and RenderSystem::getDepthBufferFor only consults
++        // window->getDepthBuffer() when the colour texture is window specific, which ours is
++        // not. Allocating one would be dead memory.
++        mDepthBuffer = 0;
++        mStencilBuffer = 0;
++
++        setFinalResolution( mRequestedWidth, mRequestedHeight );
++
++        mTexture->setPixelFormat( mHwGamma ? PFG_BGRA8_UNORM_SRGB : PFG_BGRA8_UNORM );
++        mTexture->_setDepthBufferDefaults( DepthBuffer::POOL_DEFAULT, false,
++                                           DepthBuffer::DefaultDepthBufferFormat );
++
++        mSampleDescription = textureManager->getRenderSystem()->validateSampleDescription(
++            mRequestedSampleDescription, mTexture->getPixelFormat() );
++        mTexture->_setSampleDescription( mRequestedSampleDescription, mSampleDescription );
++
++        mTexture->_transitionTo( GpuResidency::Resident, (uint8 *)0 );
++    }
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::reposition( int32 leftPt, int32 topPt ) {}
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::requestResolution( uint32 widthPt, uint32 heightPt )
++    {
++        Window::requestResolution( widthPt, heightPt );
++
++        if( mTexture && mTexture->getResidencyStatus() != GpuResidency::OnStorage )
++            setFinalResolution( widthPt, heightPt );
++    }
++    //-------------------------------------------------------------------------
++    bool MetalWindowNull::isClosed() const { return mClosed; }
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::_setVisible( bool visible ) {}
++    //-------------------------------------------------------------------------
++    bool MetalWindowNull::isVisible() const { return false; }
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::setHidden( bool hidden ) {}
++    //-------------------------------------------------------------------------
++    bool MetalWindowNull::isHidden() const { return true; }
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::swapBuffers() {}
++    //-------------------------------------------------------------------------
++    void MetalWindowNull::getCustomAttribute( IdString name, void *pData )
++    {
++        if( name == "MetalDevice" )
++        {
++            *static_cast<MetalDevice **>( pData ) = mDevice;
++        }
++        else
++        {
++            Window::getCustomAttribute( name, pData );
++        }
++    }
++}  // namespace Ogre

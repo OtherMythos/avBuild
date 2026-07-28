@@ -124,6 +124,10 @@ if [ $BUILD_OGRE = true ]; then
 
     #Build Ogre
     cd ${OGRE_DIR}
+    #Adds MetalWindowNull, so the engine's --headless mode can bring a real Metal render
+    #system up with no NSWindow at all. Ogre only ships headless windows for Vulkan and
+    #GL3Plus (EGL), neither of which is built on macOS.
+    git apply --3way ${SCRIPT_DIR}/../patches/ogreMetalHeadless.diff
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
 
     mkdir -p ${OGRE_BIN_DIR}
@@ -132,7 +136,7 @@ if [ $BUILD_OGRE = true ]; then
     ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} \
     -DCMAKE_CXX_FLAGS="-I/usr/local/include -F/Library/Frameworks" \
     ${STATIC_FLAGS} \
-    -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/ogre2 -DCMAKE_CXX_STANDARD=11 -DOGRE_BUILD_RENDERSYSTEM_VULKAN=OFF -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=OFF ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OGRE-Next.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OGRE-Next.xcodeproj -destination='Any Mac'
 else
