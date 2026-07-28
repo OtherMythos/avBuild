@@ -102,9 +102,9 @@ IF %BUILD_OGRE% equ true (
     robocopy "%OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps" "%OGRE_DIR%/Dependencies" /E
     mkdir %OGRE_BIN_DIR%
     cd %OGRE_BIN_DIR%
-    ::OGRE_VULKAN_WINDOW_NULL gives the engine's --headless mode a windowless render
-    ::system (--rendersystem Vulkan). D3D11 has no equivalent, so it falls back to a
-    ::hidden HWND: nothing appears on screen, but a window station is still required.
+    REM OGRE_VULKAN_WINDOW_NULL gives the engine's --headless mode a windowless render
+    REM system (--rendersystem Vulkan). D3D11 has no equivalent, so it falls back to a
+    REM hidden HWND: nothing appears on screen, but a window station is still required.
     cmake %CMAKE_BUILD_SETTINGS% -DOGRE_BUILD_SAMPLES2=False -DOGRE_VULKAN_WINDOW_NULL=ON -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\ogre2 -DOGRE_DEPENDENCIES_DIR=%OGRE_DEPS_DIR%\build\%CMAKE_BUILD_TYPE%\ogredeps ..\..
     cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
