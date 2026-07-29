@@ -39,6 +39,8 @@ INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
 
 #Ogre
 OGRE_TARGET_BRANCH="v3-0"
+#Temporarily pinned to a known-good commit until the ogre-next regression is fixed upstream.
+OGRE_PINNED_COMMIT="faf7cdf546a32a2209646397e38ed87ad37fcf2a"
 OGRE_DIR_NAME="ogre2"
 OGRE_DIR="${START_DIR}/${OGRE_DIR_NAME}"
 OGRE_BIN_DIR="${OGRE_DIR}/build/${CMAKE_BUILD_TYPE}"
@@ -93,6 +95,8 @@ if [ $BUILD_OGRE = true ]; then
     git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR} || exit 1
 
     cd ${OGRE_DIR}
+    #Temporarily pinned to a known-good commit until the ogre-next regression is fixed upstream.
+    git checkout ${OGRE_PINNED_COMMIT}
     git apply ${SCRIPT_DIR}/ogreFix.diff
     git apply ${SCRIPT_DIR}/ogreLogFix.diff
 
