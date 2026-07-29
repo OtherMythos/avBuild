@@ -97,7 +97,6 @@ if [ $BUILD_OGRE = true ]; then
     cd ${OGRE_DIR}
     #Temporarily pinned to a known-good commit until the ogre-next regression is fixed upstream.
     git checkout ${OGRE_PINNED_COMMIT}
-    git apply ${SCRIPT_DIR}/ogreFix.diff
     git apply ${SCRIPT_DIR}/ogreLogFix.diff
 
     #Build dependencies first.
