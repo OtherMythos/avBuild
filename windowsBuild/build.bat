@@ -246,7 +246,9 @@ IF %BUILD_GOOGLETEST% equ true (
     cd %GOOGLETEST_DIR%
     mkdir "build\%CMAKE_BUILD_TYPE%"
     cd "build\%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\googletest ../..
+    ::gtest_force_shared_crt matches the engine's dynamic CRT (/MD, /MDd); without it googletest
+    ::defaults to the static CRT and the test binary fails to link with CRT symbol mismatches.
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%\googletest -Dgtest_force_shared_crt=ON ../..
     cmake --build . %CMAKE_CONFIG_SETTINGS%
     cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 )
