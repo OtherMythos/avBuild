@@ -29,8 +29,6 @@ SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
 
 ::Ogre
 SET "OGRE_TARGET_BRANCH=v3-0"
-::Temporarily pinned to a known-good commit until the ogre-next regression is fixed upstream.
-SET "OGRE_PINNED_COMMIT=faf7cdf546a32a2209646397e38ed87ad37fcf2a"
 SET "OGRE_DIR_NAME=ogre2"
 SET "OGRE_DIR=%START_DIR%\%OGRE_DIR_NAME%"
 SET "OGRE_BIN_DIR=%OGRE_DIR%\build\%CMAKE_BUILD_TYPE%"
@@ -99,8 +97,6 @@ IF %BUILD_OGRE% equ true (
 
     ::Build Ogre
     cd %OGRE_DIR%
-    ::Temporarily pinned to a known-good commit until the ogre-next regression is fixed upstream.
-    git checkout %OGRE_PINNED_COMMIT%
     @REM NOTE: Remove the debug.
     ::Windows is really strict about who can create a symlink so unfortunately I have to duplicate the build over.
     robocopy "%OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps" "%OGRE_DIR%/Dependencies" /E
