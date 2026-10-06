@@ -4,6 +4,9 @@ on:
   push:
     branches:  'master'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -30,3 +33,16 @@ jobs:
         with:
           name: avBuiltLinux-${{ matrix.buildType }}.tar.gz
           path: ~/build.tar.gz
+      - name: Publish to release
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Release assets are publicly downloadable without auth and don't expire, unlike artifacts.
+          TAG="deps-${GITHUB_SHA::7}"
+          # Every platform workflow races to create the same release; the losers just upload.
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "avBuilt ${GITHUB_SHA::7}" \
+            --notes "Prebuilt avEngine dependencies from $GITHUB_SHA." 2>/dev/null || true
+          cp ~/build.tar.gz avBuiltLinux-${{ matrix.buildType }}.tar.gz
+          gh release upload "$TAG" avBuiltLinux-${{ matrix.buildType }}.tar.gz --clobber
