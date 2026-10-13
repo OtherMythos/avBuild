@@ -162,6 +162,7 @@ IF %BUILD_COLIBRI% equ true (
     git apply %~dp0..\patches\colibriScrollChange.diff
     git apply %~dp0..\patches\colibriGlyphRefresh.diff
     git apply %~dp0..\patches\colibriWrapFix.diff
+    git apply %~dp0..\patches\colibriCapacityCheck.diff
     mkdir "build\%CMAKE_BUILD_TYPE%"
 
     ::Frustrating bodge I do to get colibri to see the rapidjson include

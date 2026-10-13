@@ -1,0 +1,18 @@
+diff --git a/include/ColibriGui/ColibriManager.h b/include/ColibriGui/ColibriManager.h
+index 6c0855e..7c1be3f 100644
+--- a/include/ColibriGui/ColibriManager.h
++++ b/include/ColibriGui/ColibriManager.h
+@@ -323,10 +323,11 @@ namespace Colibri
+ 		void _notifyNumGlyphsIsDirty();
+ 		void _notifyNumGlyphsBmpIsDirty();
+ 		void _updateDirtyLabels();
+-
+-	protected:
++		/// Grows the vertex buffers to fit the current glyph counts.
++		/// Call after _updateDirtyLabels when labels may have been created outside of update().
+ 		void checkVertexBufferCapacity();
+ 
++	protected:
+ 		UiVertex    *getMultipassVertexBuffer( size_t numElements, size_t textNumElements );
+ 		GlyphVertex *getMultipassTextVertexBuffer( size_t numElements, size_t textNumElements );
+ 

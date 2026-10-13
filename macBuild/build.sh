@@ -213,6 +213,7 @@ if [ $BUILD_COLIBRI = true ]; then
     git apply ${SCRIPT_DIR}/../patches/colibriScrollChange.diff
     git apply ${SCRIPT_DIR}/../patches/colibriGlyphRefresh.diff
     git apply ${SCRIPT_DIR}/../patches/colibriWrapFix.diff
+    git apply ${SCRIPT_DIR}/../patches/colibriCapacityCheck.diff
 
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
