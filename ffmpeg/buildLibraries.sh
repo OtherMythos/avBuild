@@ -38,7 +38,9 @@ FFMPEG_FLAGS=(
 )
 case "$(uname -s)" in
     Darwin)
-        OPENH264_FLAGS+=(OS=darwin STATIC_LDFLAGS=-lc++)
+        #OpenH264 only adds -arch x86_64 alongside its assembly, which Debug disables.
+        OPENH264_FLAGS+=(OS=darwin STATIC_LDFLAGS=-lc++
+            "CC=cc -arch $TARGET_ARCH" "CXX=c++ -arch $TARGET_ARCH")
         FFMPEG_FLAGS+=(--enable-videotoolbox --enable-encoder=h264_videotoolbox
             "--extra-cflags=-arch $TARGET_ARCH" "--extra-ldflags=-arch $TARGET_ARCH")
         ;;
