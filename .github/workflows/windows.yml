@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup
+        run: C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed make nasm pkgconf
       - name: Build
         run: |
           mkdir D:\build
