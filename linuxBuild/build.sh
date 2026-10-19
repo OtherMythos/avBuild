@@ -69,7 +69,7 @@ SDL2_TARGET_BRANCH="release-2.32.8"
 SDL2_DIR="${START_DIR}/SDL2"
 
 #OpenALSoft
-OPENALSOFT_TARGET_BRANCH="1.22.2"
+OPENALSOFT_TARGET_BRANCH="1.24.3"
 OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
 LIBSNDFILE_TARGET_BRANCH="1.1.0"
 LIBSNDFILE_DIR="${START_DIR}/libsndfile"
@@ -258,12 +258,9 @@ if [ $BUILD_OPENALSOFT = true ]; then
 
     git clone --branch ${OPENALSOFT_TARGET_BRANCH} https://github.com/kcat/openal-soft.git ${OPENALSOFT_DIR}
     cd ${OPENALSOFT_DIR}
-    #For static builds to prevent it producing hidden symbols.
-    git apply ${SCRIPT_DIR}/openALPatch.diff
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    #Pipewire gave me issues on my archlinux setup.
-    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DALSOFT_BACKEND_PIPEWIRE=OFF -DALSOFT_BACKEND_SNDIO=OFF -DLIBTYPE=STATIC ../..
+    cmake ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/OpenALSoft -DALSOFT_BACKEND_SNDIO=OFF -DALSOFT_REQUIRE_PIPEWIRE=ON -DALSOFT_REQUIRE_PULSEAUDIO=ON -DALSOFT_REQUIRE_ALSA=ON -DALSOFT_EXAMPLES=OFF -DALSOFT_UTILS=OFF -DLIBTYPE=STATIC ../..
     make -j${NUM_THREADS} || exit 1
     make install
 
