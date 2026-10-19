@@ -1,5 +1,6 @@
 ::@echo off
 SETLOCAL
+SET "SCRIPT_DIR=%~dp0"
 
 SET "START_DIR=%1%"
 SET "BUILD_TYPE=%2%"
@@ -24,8 +25,14 @@ SET BUILD_OPENALSOFT=true
 SET BUILD_NFD=true
 SET BUILD_LOTTIE=true
 SET BUILD_GOOGLETEST=true
+IF NOT DEFINED BUILD_FFMPEG SET BUILD_FFMPEG=true
 
 SET "INSTALL_DIR=%START_DIR%\avBuilt\%CMAKE_BUILD_TYPE%"
+
+IF %BUILD_FFMPEG% equ true (
+    python "%SCRIPT_DIR%..\ffmpeg\build.py" "%~1" --config "%~2" --verify
+    IF ERRORLEVEL 1 EXIT /B 1
+)
 
 ::Ogre
 SET "OGRE_TARGET_BRANCH=v3-0"

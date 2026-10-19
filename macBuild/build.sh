@@ -47,8 +47,19 @@ BUILD_SDL2=true
 BUILD_OPENALSOFT=true
 BUILD_LOTTIE=true
 BUILD_NFD=true
+BUILD_FFMPEG="${BUILD_FFMPEG:-true}"
 
 INSTALL_DIR="${START_DIR}/avBuilt/${CMAKE_BUILD_TYPE}"
+
+if [ "$BUILD_FFMPEG" = true ]; then
+    FFMPEG_VERIFY_ARGS=()
+    if [ "$TARGET_ARCH" = "$(uname -m)" ]; then
+        FFMPEG_VERIFY_ARGS=(--verify)
+    else
+        echo "Skipping FFmpeg runtime verification for cross-architecture build ${TARGET_ARCH}"
+    fi
+    python3 "${SCRIPT_DIR}/../ffmpeg/build.py" "$START_DIR" --config "$CMAKE_BUILD_TYPE" --arch "$TARGET_ARCH" "${FFMPEG_VERIFY_ARGS[@]}" || exit 1
+fi
 
 #Ogre
 OGRE_TARGET_BRANCH="v3-0"
