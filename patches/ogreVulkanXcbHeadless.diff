@@ -1,0 +1,16 @@
+diff --git a/RenderSystems/Vulkan/src/Windowing/X11/OgreVulkanXcbSupport.cpp b/RenderSystems/Vulkan/src/Windowing/X11/OgreVulkanXcbSupport.cpp
+index 9d4138f..0c2b069 100644
+--- a/RenderSystems/Vulkan/src/Windowing/X11/OgreVulkanXcbSupport.cpp
++++ b/RenderSystems/Vulkan/src/Windowing/X11/OgreVulkanXcbSupport.cpp
+@@ -198,7 +198,10 @@ namespace Ogre
+         if( optVideoMode != mOptions.end() && optDisplayFrequency != mOptions.end() )
+         {
+             optDisplayFrequency->second.possibleValues.clear();
+-            if( !bIsFullscreen )
++            // With no display server queryXcb finds no video modes, so there's no resolution
++            // to parse. Treat that like windowed mode rather than throwing, so the render
++            // system can still be created for a null (headless) window.
++            if( !bIsFullscreen || optVideoMode->second.currentValue.empty() )
+             {
+                 optDisplayFrequency->second.possibleValues.push_back( "N/A" );
+             }

@@ -108,6 +108,9 @@ if [ $BUILD_OGRE = true ]; then
     #Build Ogre
     cd ${OGRE_DIR}
     git apply ${SCRIPT_DIR}/ogrePatch.diff
+    #Without this the Vulkan render system throws on construction when there's no display
+    #server, so --headless Vulkan would still need X.
+    git apply ${SCRIPT_DIR}/../patches/ogreVulkanXcbHeadless.diff
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
