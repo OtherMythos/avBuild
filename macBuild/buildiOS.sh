@@ -93,6 +93,8 @@ if [ $BUILD_OGRE = true ]; then
     #Clone
     git clone --branch ${OGRE_TARGET_BRANCH} https://github.com/OGRECave/ogre-next ${OGRE_DIR}
     cd ${OGRE_DIR}
+    #Lets SceneManager::createItem take a datablock, so the Item's Hlms hash is only calculated once.
+    git apply ${SCRIPT_DIR}/../patches/ogreItemDatablock.diff
     git clone --recurse-submodules --shallow-submodules https://github.com/OGRECave/ogre-next-deps ${OGRE_DEPS_DIR}
 
     #Build dependencies first.

@@ -139,6 +139,8 @@ if [ $BUILD_OGRE = true ]; then
     #system up with no NSWindow at all. Ogre only ships headless windows for Vulkan and
     #GL3Plus (EGL), neither of which is built on macOS.
     git apply --3way ${SCRIPT_DIR}/../patches/ogreMetalHeadless.diff
+    #Lets SceneManager::createItem take a datablock, so the Item's Hlms hash is only calculated once.
+    git apply ${SCRIPT_DIR}/../patches/ogreItemDatablock.diff
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
 
     mkdir -p ${OGRE_BIN_DIR}

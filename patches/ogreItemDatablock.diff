@@ -1,0 +1,162 @@
+diff --git a/OgreMain/include/OgreItem.h b/OgreMain/include/OgreItem.h
+--- a/OgreMain/include/OgreItem.h
++++ b/OgreMain/include/OgreItem.h
+@@ -97,7 +97,7 @@ namespace Ogre
+         /** Private constructor.
+          */
+         Item( IdType id, ObjectMemoryManager *objectMemoryManager, SceneManager *manager,
+-              const MeshPtr &mesh, bool bUseMeshMat = true );
++              const MeshPtr &mesh, bool bUseMeshMat = true, HlmsDatablock *datablock = 0 );
+         /** The Mesh that this Item is based on.
+          */
+         MeshPtr mMesh;
+@@ -117,7 +117,8 @@ namespace Ogre
+         bool mInitialised;
+ 
+         /** Builds a list of SubItems based on the SubMeshes contained in the Mesh. */
+-        void buildSubItems( vector<String>::type *materialsList = 0, bool bUseMeshMat = true );
++        void buildSubItems( vector<String>::type *materialsList = 0, bool bUseMeshMat = true,
++                            HlmsDatablock *datablock = 0 );
+ 
+     public:
+         /** Default destructor.
+@@ -268,7 +269,8 @@ namespace Ogre
+             internal structures and try to rebuild them. Useful if you changed the
+             content of a Mesh or Skeleton at runtime.
+         */
+-        void _initialise( bool forceReinitialise = false, bool bUseMeshMat = true );
++        void _initialise( bool forceReinitialise = false, bool bUseMeshMat = true,
++                          HlmsDatablock *datablock = 0 );
+         /** Tear down the internal structures of this Item, rendering it uninitialised. */
+         void _deinitialise();
+ 
+@@ -292,6 +294,11 @@ namespace Ogre
+ 
+         static String FACTORY_TYPE_NAME;
+ 
++        /// Creates an Item whose SubItems start on the given datablock, so its Hlms hash
++        /// is only calculated once. Use SceneManager::createItem rather than calling this.
++        Item *createItem( IdType id, ObjectMemoryManager *objectMemoryManager,
++                          SceneManager *manager, const MeshPtr &mesh, HlmsDatablock *datablock );
++
+         const String &getType() const override;
+ 
+         void destroyInstance( MovableObject *obj ) override;
+diff --git a/OgreMain/src/OgreItem.cpp b/OgreMain/src/OgreItem.cpp
+--- a/OgreMain/src/OgreItem.cpp
++++ b/OgreMain/src/OgreItem.cpp
+@@ -55,12 +55,13 @@ namespace Ogre
+     }
+     //-----------------------------------------------------------------------
+     Item::Item( IdType id, ObjectMemoryManager *objectMemoryManager, SceneManager *manager,
+-                const MeshPtr &mesh, bool bUseMeshMat /*= true */ ) :
++                const MeshPtr &mesh, bool bUseMeshMat /*= true */,
++                HlmsDatablock *datablock /*= 0 */ ) :
+         MovableObject( id, objectMemoryManager, manager, 10u ),
+         mMesh( mesh ),
+         mInitialised( false )
+     {
+-        _initialise( false, bUseMeshMat );
++        _initialise( false, bUseMeshMat, datablock );
+         mObjectData.mQueryFlags[mObjectData.mIndex] = SceneManager::QUERY_ENTITY_DEFAULT_MASK;
+     }
+ 
+@@ -73,7 +74,8 @@ namespace Ogre
+         }
+     }
+     //-----------------------------------------------------------------------
+-    void Item::_initialise( bool forceReinitialise /*= false*/, bool bUseMeshMat /*= true */ )
++    void Item::_initialise( bool forceReinitialise /*= false*/, bool bUseMeshMat /*= true */,
++                            HlmsDatablock *datablock /*= 0 */ )
+     {
+         vector<String>::type prevMaterialsList;
+         if( forceReinitialise )
+@@ -110,7 +112,7 @@ namespace Ogre
+         mLodMesh = mMesh->_getLodValueArray();
+ 
+         // Build main subItem list
+-        buildSubItems( prevMaterialsList.empty() ? 0 : &prevMaterialsList, bUseMeshMat );
++        buildSubItems( prevMaterialsList.empty() ? 0 : &prevMaterialsList, bUseMeshMat, datablock );
+ 
+         {
+             // Without filling the renderables list, the RenderQueue won't
+@@ -224,7 +226,8 @@ namespace Ogre
+     //-----------------------------------------------------------------------
+     const String &Item::getMovableType() const { return ItemFactory::FACTORY_TYPE_NAME; }
+     //-----------------------------------------------------------------------
+-    void Item::buildSubItems( vector<String>::type *materialsList, bool bUseMeshMat /* = true*/ )
++    void Item::buildSubItems( vector<String>::type *materialsList, bool bUseMeshMat /* = true*/,
++                              HlmsDatablock *datablock /*= 0 */ )
+     {
+         // Create SubEntities
+         unsigned numSubMeshes = mMesh->getNumSubMeshes();
+@@ -235,6 +238,12 @@ namespace Ogre
+             SubMesh *subMesh = mMesh->getSubMesh( i );
+             mSubItems.push_back( SubItem( this, subMesh ) );
+ 
++            if( datablock && !materialsList )
++            {
++                mSubItems.back().setDatablock( datablock );
++                continue;
++            }
++
+             // Try first Hlms materials, then the low level ones.
+ 
+             mSubItems.back().setDatablockOrMaterialName(
+@@ -382,6 +391,13 @@ namespace Ogre
+         return OGRE_NEW Item( id, objectMemoryManager, manager, pMesh, useMeshMat );
+     }
+     //-----------------------------------------------------------------------
++    Item *ItemFactory::createItem( IdType id, ObjectMemoryManager *objectMemoryManager,
++                                   SceneManager *manager, const MeshPtr &mesh,
++                                   HlmsDatablock *datablock )
++    {
++        return OGRE_NEW Item( id, objectMemoryManager, manager, mesh, true, datablock );
++    }
++    //-----------------------------------------------------------------------
+     void ItemFactory::destroyInstance( MovableObject *obj ) { OGRE_DELETE obj; }
+ 
+ }  // namespace Ogre
+diff --git a/OgreMain/include/OgreSceneManager.h b/OgreMain/include/OgreSceneManager.h
+--- a/OgreMain/include/OgreSceneManager.h
++++ b/OgreMain/include/OgreSceneManager.h
+@@ -1380,6 +1380,12 @@ namespace Ogre
+         */
+         virtual Item *createItem( const MeshPtr &pMesh, SceneMemoryMgrTypes sceneType = SCENE_DYNAMIC );
+ 
++        /** Create an Item with every SubItem already on the given datablock. Cheaper than
++            createItem followed by Item::setDatablock, which calculates the Hlms hash twice.
++        */
++        virtual Item *createItem( const MeshPtr &pMesh, SceneMemoryMgrTypes sceneType,
++                                  HlmsDatablock *datablock );
++
+         /// Removes & destroys an Item from the SceneManager.
+         virtual void destroyItem( Item *item );
+ 
+diff --git a/OgreMain/src/OgreSceneManager.cpp b/OgreMain/src/OgreSceneManager.cpp
+--- a/OgreMain/src/OgreSceneManager.cpp
++++ b/OgreMain/src/OgreSceneManager.cpp
+@@ -551,6 +551,23 @@ namespace Ogre
+         return createItem( pMesh->getName(), pMesh->getGroup(), sceneType );
+     }
+ 
++    //-----------------------------------------------------------------------
++    Item *SceneManager::createItem( const MeshPtr &pMesh, SceneMemoryMgrTypes sceneType,
++                                    HlmsDatablock *datablock )
++    {
++        ItemFactory *factory = static_cast<ItemFactory *>(
++            Root::getSingleton().getMovableObjectFactory( ItemFactory::FACTORY_TYPE_NAME ) );
++        MovableObjectCollection *objectMap =
++            getMovableObjectCollection( ItemFactory::FACTORY_TYPE_NAME );
++
++        OGRE_LOCK_MUTEX( objectMap->mutex );
++
++        Item *item = factory->createItem( Id::generateNewId<MovableObject>(),
++                                          &mEntityMemoryManager[sceneType], this, pMesh, datablock );
++        objectMap->movableObjects.push_back( item );
++        item->mGlobalIndex = objectMap->movableObjects.size() - 1;
++        return item;
++    }
+     //-----------------------------------------------------------------------
+     void SceneManager::destroyItem( Item *i ) { destroyMovableObject( i ); }
+     //-----------------------------------------------------------------------

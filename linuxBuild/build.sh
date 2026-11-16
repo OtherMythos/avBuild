@@ -111,6 +111,8 @@ if [ $BUILD_OGRE = true ]; then
     #Without this the Vulkan render system throws on construction when there's no display
     #server, so --headless Vulkan would still need X.
     git apply ${SCRIPT_DIR}/../patches/ogreVulkanXcbHeadless.diff
+    #Lets SceneManager::createItem take a datablock, so the Item's Hlms hash is only calculated once.
+    git apply ${SCRIPT_DIR}/../patches/ogreItemDatablock.diff
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
     mkdir -p ${OGRE_BIN_DIR}
     cd ${OGRE_BIN_DIR}
