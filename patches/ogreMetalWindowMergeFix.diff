@@ -1,0 +1,14 @@
+diff --git a/RenderSystems/Metal/src/OgreMetalWindow.mm b/RenderSystems/Metal/src/OgreMetalWindow.mm
+index 217a62dce..447498e4d 100644
+--- a/RenderSystems/Metal/src/OgreMetalWindow.mm
++++ b/RenderSystems/Metal/src/OgreMetalWindow.mm
+@@ -423,7 +423,8 @@ static void SetupMetalWindowListeners( Ogre::MetalWindow *metalWindow, NSWindow
+                 SetupMetalWindowListeners( this, window );
+                 [window orderFront:nil];
+             }
+-            else { mIsExternal = true; }
++        }
++        else { mIsExternal = true; }
+ 
+             if( !mMetalView )
+             {
