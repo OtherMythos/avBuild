@@ -106,6 +106,8 @@ IF %BUILD_OGRE% equ true (
     cd %OGRE_DIR%
     ::Lets SceneManager::createItem take a datablock, so the Item's Hlms hash is only calculated once.
     git apply %~dp0..\patches\ogreItemDatablock.diff
+    ::Backport of ogre-next master's per-datablock custom pieces and custom properties.
+    git apply %~dp0..\patches\ogreDatablockCustomPieces.diff
     @REM NOTE: Remove the debug.
     ::Windows is really strict about who can create a symlink so unfortunately I have to duplicate the build over.
     robocopy "%OGRE_DEPS_DIR%/build/%CMAKE_BUILD_TYPE%/ogredeps" "%OGRE_DIR%/Dependencies" /E

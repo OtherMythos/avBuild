@@ -97,6 +97,8 @@ if [ $BUILD_OGRE = true ]; then
     git apply ${SCRIPT_DIR}/ogreFix.diff
     #Lets SceneManager::createItem take a datablock, so the Item's Hlms hash is only calculated once.
     git apply ${SCRIPT_DIR}/../patches/ogreItemDatablock.diff
+    #Backport of ogre-next master's per-datablock custom pieces and custom properties.
+    git apply ${SCRIPT_DIR}/../patches/ogreDatablockCustomPieces.diff
 
     #Build dependencies first.
     cd ${OGRE_DEPS_DIR}

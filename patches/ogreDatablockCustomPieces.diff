@@ -1,0 +1,977 @@
+diff --git a/Docs/2.0/JSON/PbsAllSettings.json b/Docs/2.0/JSON/PbsAllSettings.json
+index 6844652d0e..4a824d52ba 100644
+--- a/Docs/2.0/JSON/PbsAllSettings.json
++++ b/Docs/2.0/JSON/PbsAllSettings.json
+@@ -65,6 +65,15 @@ including invalid combinations (i.e. having a Metallic texture and a Specular te
+             "receive_shadows"	:	true,
+             "refraction_strength" : 0.2,
+ 
++            "custom_piece_file_pre": [ "filename.glsl", "resourceGroup" ],
++            "custom_piece_file_vs" : [ "filename.glsl", "resourceGroup" ],
++            "custom_piece_file_ps" : [ "filename.any", "resourceGroup" ],
++            "custom_piece_file_gs" : [ "filename.any", "resourceGroup" ],
++            "custom_piece_file_hs" : [ "filename.hlsl", "resourceGroup" ],
++            "custom_piece_file_ds" : [ "filename.metal", "resourceGroup" ],
++
++            "custom_properties" : { "property_name0" : 5, "property_name2" : -2 },
++
+             "workflow" : "specular_ogre" "specular_fresnel" "metallic",
+ 
+             "transparency" :
+diff --git a/OgreMain/include/OgreHlms.h b/OgreMain/include/OgreHlms.h
+index cebb71c81e..60b4907f2d 100644
+--- a/OgreMain/include/OgreHlms.h
++++ b/OgreMain/include/OgreHlms.h
+@@ -267,6 +267,24 @@ namespace Ogre
+         uint8         mPrecisionMode;  ///< See PrecisionMode
+         bool          mFastShaderBuildHack;
+ 
++    public:
++        struct DatablockCustomPieceFile
++        {
++            String filename;
++            String resourceGroup;
++            String sourceCode;
++
++            void getCodeChecksum( uint64 outHash[2] ) const;
++
++            bool isCacheable() const { return !resourceGroup.empty(); }
++        };
++
++        typedef std::map<int32, DatablockCustomPieceFile> DatablockCustomPieceFileMap;
++
++    protected:
++        /// See HlmsDatablock::setCustomPieceFile.
++        DatablockCustomPieceFileMap mDatablockCustomPieceFiles;
++
+         /// The default datablock occupies the name IdString(); which is not the same as IdString("")
+         HlmsDatablock *mDefaultDatablock;
+ 
+@@ -409,6 +427,11 @@ namespace Ogre
+                                                   const String &debugFilenameOutput, uint32 finalHash,
+                                                   ShaderType shaderType );
+ 
++        void parseCustomPiece( const int32 customPieceName );
++
++        /// Sets the custom piece and custom property Hlms properties requested by the datablock.
++        void setupDatablockCustomProperties( const HlmsDatablock *datablock );
++
+     public:
+         void _compileShaderFromPreprocessedSource( const RenderableCache &mergedCache,
+                                                    const String           source[NumShaderTypes] );
+@@ -904,6 +927,49 @@ namespace Ogre
+ 
+         void _clearShaderCache();
+ 
++        /** See HlmsDatablock::setCustomPieceCodeFromMemory & HlmsDatablock::setCustomPieceFile.
++        @param filename
++            Name of the file.
++        @param shaderCode
++            The contents of the file.
++        */
++        void _addDatablockCustomPieceFile( const String &filename, const String &resourceGroup );
++
++        enum CachedCustomPieceFileStatus
++        {
++            /// Everything ok.
++            CCPFS_Success,
++            /// Recompile the cache from the templates.
++            CCPFS_OutOfDate,
++            /// The cache contains unrecoverable errors. Do not use the cache.
++            CCPFS_CriticalError,
++        };
++
++        /**
++        @param filename
++            See _addDatablockCustomPieceFile() overload.
++            Unlike the other overload, file not found errors are ignored.
++        @param resourceGroup
++            See _addDatablockCustomPieceFile() overload.
++        @param templateHash
++            The expected hash of the file. File won't be added if the hash does not match.
++        @return
++            See CachedCustomPieceFileStatus.
++        */
++        CachedCustomPieceFileStatus _addDatablockCustomPieceFile( const String &filename,
++                                                                  const String &resourceGroup,
++                                                                  const uint64  sourceCodeHash[2] );
++
++        void _addDatablockCustomPieceFileFromMemory( const String &filename, const String &sourceCode );
++
++        bool isDatablockCustomPieceFileCacheable( int32 filenameHashId ) const;
++
++        const String &getDatablockCustomPieceFileNameStr( int32 filenameHashId ) const;
++
++        /// Returns all the data we know about filenameHashId. Can be nullptr if not found.
++        const DatablockCustomPieceFile * /*ogre_nullable*/
++        getDatablockCustomPieceData( int32 filenameHashId ) const;
++
+         virtual void _changeRenderSystem( RenderSystem *newRs );
+ 
+         RenderSystem *getRenderSystem() const { return mRenderSystem; }
+@@ -1014,6 +1080,8 @@ namespace Ogre
+         static const IdString AlphaToCoverage;
+         // Per material. Related with SsRefractionsAvailable
+         static const IdString ScreenSpaceRefractions;
++        // Do not set/get directly.
++        static const IdString _DatablockCustomPieceShaderName[CustomPieceStage::NumCustomPieceStages];
+ 
+         // Standard depth range is being used instead of reverse Z.
+         static const IdString NoReverseDepth;
+diff --git a/OgreMain/include/OgreHlmsCommon.h b/OgreMain/include/OgreHlmsCommon.h
+index fab192e917..a58ee13045 100644
+--- a/OgreMain/include/OgreHlmsCommon.h
++++ b/OgreMain/include/OgreHlmsCommon.h
+@@ -227,6 +227,25 @@ namespace Ogre
+         return _left->hash < _right->hash;
+     }
+ 
++    namespace CustomPieceStage
++    {
++        enum CustomPieceStage
++        {
++            PreVertexShader,  // For pieces parsed before the default Vertex Shader pieces are parses.
++            VertexShader,
++            PixelShader,
++            GeometryShader,
++            HullShader,
++            DomainShader,
++            NumCustomPieceStages
++        };
++
++        inline CustomPieceStage from( ShaderType shaderType )
++        {
++            return CustomPieceStage( shaderType + 1u );
++        }
++    }  // namespace CustomPieceStage
++
+     /** @} */
+     /** @} */
+ 
+diff --git a/OgreMain/include/OgreHlmsDatablock.h b/OgreMain/include/OgreHlmsDatablock.h
+index 8b709ba188..c5bc6dba34 100644
+--- a/OgreMain/include/OgreHlmsDatablock.h
++++ b/OgreMain/include/OgreHlmsDatablock.h
+@@ -285,12 +285,32 @@ namespace Ogre
+     {
+         friend class RenderQueue;
+ 
++    public:
++        struct CustomProperty
++        {
++            /// We must keep keyStr for proper serialization (e.g. saving to JSON).
++            String   keyStr;
++            IdString keyName;
++            int32    value;
++
++            CustomProperty( const String &_keyStr, int32 _value ) :
++                keyStr( _keyStr ),
++                keyName( _keyStr ),
++                value( _value )
++            {
++            }
++        };
++
++        typedef vector<CustomProperty>::type CustomPropertyVec;
++
+     protected:
+         // Non-hot variables first (can't put them last as HlmsDatablock may be derived and
+         // it's better if mShadowConstantBias is together with the derived type's variables
+         /// List of renderables currently using this datablock
+         vector<Renderable *>::type mLinkedRenderables;
+ 
++        int32 mCustomPieceFileIdHash[CustomPieceStage::NumCustomPieceStages];
++
+         Hlms    *mCreator;
+         IdString mName;
+ 
+@@ -321,6 +341,8 @@ namespace Ogre
+         HlmsMacroblock const *mMacroblock[2];
+         HlmsBlendblock const *mBlendblock[2];
+ 
++        CustomPropertyVec mCustomProperties;
++
+     public:
+         /// When false, we won't try to have Textures become resident
+         bool mAllowTextureResidencyChange;
+@@ -351,6 +373,62 @@ namespace Ogre
+         IdString getName() const { return mName; }
+         Hlms    *getCreator() const { return mCreator; }
+ 
++        /** Same as setCustomPieceFile() but sources the code from memory instead of from disk.
++
++            Calling this function triggers HlmsDatablock::flushRenderables.
++        @remarks
++            HlmsDiskCache cannot cache shaders generated from memory as it
++            cannot guarantee the cache isn't out of date.
++        @param filename
++            "Filename" to identify it. It must be unique. Empty to disable.
++            If the filename has already been previously provided, the contents must be an exact match.
++        @param shaderCode
++            Shader source code.
++        @param stage
++            Shader stage to be used.
++        */
++        void setCustomPieceCodeFromMemory( const String &filename, const String &shaderCode,
++                                           CustomPieceStage::CustomPieceStage stage );
++
++        /** Sets the filename of a piece file to be parsed from disk. First, before all other files.
++
++            Calling this function triggers HlmsDatablock::flushRenderables.
++        @remarks
++            HlmsDiskCache can cache shaders generated with setCustomPieceFile().
++        @param filename
++            Filename of the piece file. Must be unique. Empty to disable.
++            If the filename has already been previously provided, the contents must be an exact match.
++        @param resourceGroup
++        @param stage
++            Shader stage to be used.
++        */
++        void setCustomPieceFile( const String &filename, const String &resourceGroup,
++                                 CustomPieceStage::CustomPieceStage stage );
++
++        /// Returns the internal ID generated by setCustomPieceFile() and setCustomPieceCodeFromMemory().
++        /// All calls with the same filename share the same ID. This ID is a deterministic hash.
++        /// Returns 0 if unset.
++        int32 getCustomPieceFileIdHash( CustomPieceStage::CustomPieceStage stage ) const;
++
++        /// Returns the filename argument set to setCustomPieceFile() and setCustomPieceCodeFromMemory().
++        const String &getCustomPieceFileStr( CustomPieceStage::CustomPieceStage stage ) const;
++
++        /** Sets properties to be used by this datablock. This is useful when you want to activate
++            custom shader code for specific materials (i.e. via setCustomPieceFile() or customized Hlms
++            implementations).
++            If you set a property whose name conflicts with an internal name used by the Hlms
++            implementation, shader generation will likely be invalid.
++        @remarks
++            Calling this function triggers HlmsDatablock::flushRenderables.
++        @param properties
++            Properties to set. Order does not matter.
++        @param bSwap
++            True if we should swap the contents of properties with out container.
++        */
++        void setCustomProperties( CustomPropertyVec &properties, bool bSwap );
++
++        const CustomPropertyVec &getCustomProperties() const { return mCustomProperties; }
++
+         /** Sets a new macroblock that matches the same parameter as the input.
+             Decreases the reference count of the previously set one.
+             Runs an O(N) search to get the right block.
+diff --git a/OgreMain/include/OgreHlmsDiskCache.h b/OgreMain/include/OgreHlmsDiskCache.h
+index 1395fcdbcb..7ce79567de 100644
+--- a/OgreMain/include/OgreHlmsDiskCache.h
++++ b/OgreMain/include/OgreHlmsDiskCache.h
+@@ -158,12 +158,23 @@ namespace Ogre
+ 
+         typedef vector<Pso>::type PsoVec;
+ 
++        struct DatablockCustomPiecesCache
++        {
++            uint64 sourceCodeHash[2];  // 128 bit hash
++            String filename;
++            String resourceGroup;
++        };
++
++        typedef vector<DatablockCustomPiecesCache>::type DatablockCustomPiecesCacheVec;
++
+         struct Cache
+         {
+             uint64        templateHash[2];  // 128 bit hash
+             uint8         type;             ///< See HlmsTypes
+             SourceCodeVec sourceCode;
+             PsoVec        pso;
++
++            DatablockCustomPiecesCacheVec datablockCustomPieceFiles;
+         };
+ 
+         bool         mTemplatesOutOfDate;
+diff --git a/OgreMain/src/OgreHlms.cpp b/OgreMain/src/OgreHlms.cpp
+index 2d7ca14f65..988b0dd160 100644
+--- a/OgreMain/src/OgreHlms.cpp
++++ b/OgreMain/src/OgreHlms.cpp
+@@ -189,6 +189,17 @@ namespace Ogre
+     const IdString HlmsBaseProp::AlphaBlend = IdString( "hlms_alphablend" );
+     const IdString HlmsBaseProp::AlphaToCoverage = IdString( "hlms_alpha_to_coverage" );
+     const IdString HlmsBaseProp::ScreenSpaceRefractions = IdString( "hlms_screen_space_refractions" );
++    // We use a different convention because it's a really private property that ideally
++    // shouldn't be exposed to users.
++    const IdString
++        HlmsBaseProp::_DatablockCustomPieceShaderName[CustomPieceStage::NumCustomPieceStages] = {
++            IdString( "_DatablockCustomPieceShaderNamePRE" ),
++            IdString( "_DatablockCustomPieceShaderNameVS" ),
++            IdString( "_DatablockCustomPieceShaderNamePS" ),
++            IdString( "_DatablockCustomPieceShaderNameGS" ),
++            IdString( "_DatablockCustomPieceShaderNameHS" ),
++            IdString( "_DatablockCustomPieceShaderNameDS" ),
++        };
+ 
+     const IdString HlmsBaseProp::NoReverseDepth = IdString( "hlms_no_reverse_depth" );
+     const IdString HlmsBaseProp::ReadOnlyIsTex = IdString( "hlms_readonly_is_tex" );
+@@ -358,6 +369,13 @@ namespace Ogre
+         }
+     }
+     //-----------------------------------------------------------------------------------
++    void Hlms::DatablockCustomPieceFile::getCodeChecksum( uint64 outHash[2] ) const
++    {
++        memset( outHash, 0, sizeof( uint64 ) * 2u );
++        OGRE_HASH128_FUNC( sourceCode.data(), static_cast<int>( sourceCode.size() ), IdString::Seed,
++                           outHash );
++    }
++    //-----------------------------------------------------------------------------------
+     void Hlms::getTemplateChecksum( uint64 outHash[2] ) const
+     {
+         FastArray<uint8> fileContents;
+@@ -1863,6 +1881,18 @@ namespace Ogre
+ 
+         mDataFolder = newDataFolder;
+         enumeratePieceFiles();
++
++        // Reload datablock pieces (those that can be reloaded from disk).
++        for( auto &itor : mDatablockCustomPieceFiles )
++        {
++            DatablockCustomPieceFile &datablockCustomPiece = itor.second;
++            if( datablockCustomPiece.isCacheable() )
++            {
++                const DataStreamPtr stream = ResourceGroupManager::getSingleton().openResource(
++                    datablockCustomPiece.filename, datablockCustomPiece.resourceGroup );
++                datablockCustomPiece.sourceCode = stream->getAsString();
++            }
++        }
+     }
+     //-----------------------------------------------------------------------------------
+     ArchiveVec Hlms::getPiecesLibraryAsArchiveVec() const
+@@ -2274,6 +2304,28 @@ namespace Ogre
+         mShaderCodeCache.push_back( codeCache );
+     }
+     //-----------------------------------------------------------------------------------
++    void Hlms::parseCustomPiece( const int32 customPieceName )
++    {
++        // Parse custom arbitrary shader piece specified by the datablock.
++        DatablockCustomPieceFileMap::const_iterator it =
++            mDatablockCustomPieceFiles.find( customPieceName );
++        OGRE_ASSERT_LOW( it != mDatablockCustomPieceFiles.end() );
++
++        String inString = it->second.sourceCode;
++        String outString;
++
++        this->parseMath( inString, outString );
++        while( outString.find( "@foreach" ) != String::npos )
++        {
++            this->parseForEach( outString, inString );
++            inString.swap( outString );
++        }
++        this->parseProperties( outString, inString );
++        this->parseUndefPieces( inString, outString );
++        this->collectPieces( outString, inString );
++        this->parseCounter( inString, outString );
++    }
++    //-----------------------------------------------------------------------------------
+     void Hlms::compileShaderCode( ShaderCodeCache &codeCache )
+     {
+         OgreProfileExhaustive( "Hlms::compileShaderCode" );
+@@ -2349,7 +2401,16 @@ namespace Ogre
+                         dumpProperties( debugDumpFile );
+                 }
+ 
+-                // Library piece files first
++                if( i == VertexShader )
++                {
++                    const int32 customPieceName =
++                        getProperty( HlmsBaseProp::_DatablockCustomPieceShaderName
++                                              [CustomPieceStage::PreVertexShader] );
++                    if( customPieceName )
++                        parseCustomPiece( customPieceName );
++                }
++
++                // Library piece files first.
+                 LibraryVec::const_iterator itor = mLibrary.begin();
+                 LibraryVec::const_iterator endt = mLibrary.end();
+ 
+@@ -2359,6 +2420,13 @@ namespace Ogre
+                     ++itor;
+                 }
+ 
++                const CustomPieceStage::CustomPieceStage customPieceStage =
++                    CustomPieceStage::from( ShaderType( i ) );
++                const int32 customPieceName =
++                    getProperty( HlmsBaseProp::_DatablockCustomPieceShaderName[customPieceStage] );
++                if( customPieceName )
++                    parseCustomPiece( customPieceName );
++
+                 // Main piece files
+                 processPieces( mDataFolder, mPieceFiles[i] );
+ 
+@@ -2640,6 +2708,24 @@ namespace Ogre
+         }
+     }
+     //-----------------------------------------------------------------------------------
++    void Hlms::setupDatablockCustomProperties( const HlmsDatablock *datablock )
++    {
++        for( size_t i = 0u; i < CustomPieceStage::NumCustomPieceStages; ++i )
++        {
++            const int32 filenameHashId = datablock->getCustomPieceFileIdHash(
++                static_cast<CustomPieceStage::CustomPieceStage>( i ) );
++            if( filenameHashId )
++                setProperty( HlmsBaseProp::_DatablockCustomPieceShaderName[i], filenameHashId );
++        }
++
++        {
++            const HlmsDatablock::CustomPropertyVec &customProperties =
++                datablock->getCustomProperties();
++            for( const HlmsDatablock::CustomProperty &property : customProperties )
++                setProperty( property.keyName, property.value );
++        }
++    }
++    //-----------------------------------------------------------------------------------
+     void Hlms::calculateHashFor( Renderable *renderable, uint32 &outHash, uint32 &outCasterHash )
+     {
+         OgreProfileExhaustive( "Hlms::calculateHashFor" );
+@@ -2662,6 +2748,8 @@ namespace Ogre
+ 
+         HlmsDatablock *datablock = renderable->getDatablock();
+ 
++        setupDatablockCustomProperties( datablock );
++
+         setProperty( HlmsBaseProp::AlphaTest, datablock->getAlphaTest() != CMPF_ALWAYS_PASS );
+         setProperty( HlmsBaseProp::AlphaTestShadowCasterOnly,
+                      datablock->getAlphaTestShadowCasterOnly() );
+@@ -2711,6 +2799,8 @@ namespace Ogre
+             setProperty( HlmsPsoProp::InputLayoutId, vao->getInputLayoutId() );
+         }
+         calculateHashForPreCaster( renderable, piecesCaster, pieces );
++        // calculateHashForPreCaster implementations erase properties they don't know about.
++        setupDatablockCustomProperties( datablock );
+         setProperty( HlmsPsoProp::Macroblock,
+                      renderable->getDatablock()->getMacroblock( true )->mLifetimeId );
+         setProperty( HlmsPsoProp::Blendblock,
+@@ -3494,6 +3584,133 @@ namespace Ogre
+     //-----------------------------------------------------------------------------------
+     void Hlms::_clearShaderCache() { clearShaderCache(); }
+     //-----------------------------------------------------------------------------------
++    void Hlms::_addDatablockCustomPieceFile( const String &filename, const String &resourceGroup )
++    {
++        const int32 filenameHash = static_cast<int32>( IdString( filename ).getU32Value() );
++        DatablockCustomPieceFileMap::const_iterator itor =
++            mDatablockCustomPieceFiles.find( filenameHash );
++
++        const DataStreamPtr stream =
++            ResourceGroupManager::getSingleton().openResource( filename, resourceGroup );
++
++        const String sourceCode = stream->getAsString();
++
++        if( itor == mDatablockCustomPieceFiles.end() )
++        {
++            mDatablockCustomPieceFiles.insert(
++                { filenameHash, { filename, resourceGroup, sourceCode } } );
++        }
++        else if( itor->second.sourceCode != sourceCode )
++        {
++            OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS,
++                         "Calling setCustomPieceFile and/or setCustomPieceCodeFromMemory twice with "
++                         "same filename '" +
++                             filename +
++                             "' but different content.\n"
++                             "Maybe there's an HlmsDiskCache bug? Try deleting the cache.\n"
++                             "Maybe there's a file name hash collision?",
++                         "Hlms::_addDatablockCustomPieceFile" );
++        }
++    }
++    //-----------------------------------------------------------------------------------
++    Hlms::CachedCustomPieceFileStatus Hlms::_addDatablockCustomPieceFile(
++        const String &filename, const String &resourceGroup, const uint64 sourceCodeHash[2] )
++    {
++        const int32 filenameHash = static_cast<int32>( IdString( filename ).getU32Value() );
++        DatablockCustomPieceFileMap::const_iterator itor =
++            mDatablockCustomPieceFiles.find( filenameHash );
++
++        try
++        {
++            Hlms::CachedCustomPieceFileStatus retVal = CCPFS_Success;
++
++            const DataStreamPtr stream =
++                ResourceGroupManager::getSingleton().openResource( filename, resourceGroup );
++
++            const String sourceCode = stream->getAsString();
++
++            DatablockCustomPieceFile entry{ filename, resourceGroup, sourceCode };
++
++            uint64 currentChecksum[2];
++            entry.getCodeChecksum( currentChecksum );
++            if( currentChecksum[0] != sourceCodeHash[0] && currentChecksum[1] != sourceCodeHash[1] )
++                retVal = CCPFS_OutOfDate;
++
++            if( itor == mDatablockCustomPieceFiles.end() )
++            {
++                mDatablockCustomPieceFiles.insert( { filenameHash, entry } );
++            }
++            else if( itor->second.sourceCode != sourceCode )
++            {
++                OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS,
++                             "Calling setCustomPieceFile and/or setCustomPieceCodeFromMemory twice with "
++                             "same filename '" +
++                                 filename +
++                                 "' but different content.\n"
++                                 "Maybe there's an HlmsDiskCache bug? Try deleting the cache.\n"
++                                 "Maybe there's a file name hash collision?",
++                             "Hlms::_addDatablockCustomPieceFile" );
++            }
++
++            return retVal;
++        }
++        catch( FileNotFoundException &e )
++        {
++            LogManager::getSingleton().logMessage( e.getFullDescription(), LML_CRITICAL );
++            return CCPFS_CriticalError;
++        }
++    }
++    //-----------------------------------------------------------------------------------
++    void Hlms::_addDatablockCustomPieceFileFromMemory( const String &filename, const String &sourceCode )
++    {
++        const int32 filenameHash = static_cast<int32>( IdString( filename ).getU32Value() );
++        DatablockCustomPieceFileMap::const_iterator itor =
++            mDatablockCustomPieceFiles.find( filenameHash );
++
++        if( itor == mDatablockCustomPieceFiles.end() )
++        {
++            mDatablockCustomPieceFiles.insert( { filenameHash, { filename, "", sourceCode } } );
++        }
++        else if( itor->second.sourceCode != sourceCode )
++        {
++            OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS,
++                         "Calling setCustomPieceFile and/or setCustomPieceCodeFromMemory twice with "
++                         "same filename '" +
++                             filename +
++                             "' but different content.\n"
++                             "Maybe there's an HlmsDiskCache bug? Try deleting the cache.\n"
++                             "Maybe there's a file name hash collision?",
++                         "Hlms::_addDatablockCustomPieceFileFromMemory" );
++        }
++    }
++    //-----------------------------------------------------------------------------------
++    bool Hlms::isDatablockCustomPieceFileCacheable( int32 filenameHashId ) const
++    {
++        DatablockCustomPieceFileMap::const_iterator itor =
++            mDatablockCustomPieceFiles.find( filenameHashId );
++        if( itor != mDatablockCustomPieceFiles.end() )
++            return itor->second.isCacheable();
++        return false;
++    }
++    //-----------------------------------------------------------------------------------
++    const String &Hlms::getDatablockCustomPieceFileNameStr( int32 filenameHashId ) const
++    {
++        DatablockCustomPieceFileMap::const_iterator itor =
++            mDatablockCustomPieceFiles.find( filenameHashId );
++        if( itor != mDatablockCustomPieceFiles.end() )
++            return itor->second.filename;
++        return BLANKSTRING;
++    }
++    //-----------------------------------------------------------------------------------
++    const Hlms::DatablockCustomPieceFile *Hlms::getDatablockCustomPieceData( int32 filenameHashId ) const
++    {
++        DatablockCustomPieceFileMap::const_iterator itor =
++            mDatablockCustomPieceFiles.find( filenameHashId );
++        if( itor != mDatablockCustomPieceFiles.end() )
++            return &itor->second;
++        return 0;
++    }
++    //-----------------------------------------------------------------------------------
+     void Hlms::_changeRenderSystem( RenderSystem *newRs )
+     {
+         clearShaderCache();
+diff --git a/OgreMain/src/OgreHlmsDatablock.cpp b/OgreMain/src/OgreHlmsDatablock.cpp
+index a68a95b924..d8dd5b6d41 100644
+--- a/OgreMain/src/OgreHlmsDatablock.cpp
++++ b/OgreMain/src/OgreHlmsDatablock.cpp
+@@ -114,6 +114,7 @@ namespace Ogre
+     //-----------------------------------------------------------------------------------
+     HlmsDatablock::HlmsDatablock( IdString name, Hlms *creator, const HlmsMacroblock *macroblock,
+                                   const HlmsBlendblock *blendblock, const HlmsParamVec &params ) :
++        mCustomPieceFileIdHash{},
+         mCreator( creator ),
+         mName( name ),
+         mTextureHash( 0 ),
+@@ -225,12 +226,16 @@ namespace Ogre
+         datablock->setBlendblock( const_cast<HlmsBlendblock *>( mBlendblock[0] ), false );
+         datablock->setBlendblock( const_cast<HlmsBlendblock *>( mBlendblock[1] ), true );
+ 
++        datablock->mCustomProperties = mCustomProperties;
+         datablock->mAlphaTestCmp = mAlphaTestCmp;
+         datablock->mAlphaTestShadowCasterOnly = mAlphaTestShadowCasterOnly;
+         datablock->mAlphaTestThreshold = mAlphaTestThreshold;
+ 
+         datablock->mShadowConstantBias = mShadowConstantBias;
+ 
++        for( size_t i = 0u; i < CustomPieceStage::NumCustomPieceStages; ++i )
++            datablock->mCustomPieceFileIdHash[i] = mCustomPieceFileIdHash[i];
++
+         cloneImpl( datablock );
+ 
+         datablock->calculateHash();
+@@ -238,6 +243,73 @@ namespace Ogre
+         return datablock;
+     }
+     //-----------------------------------------------------------------------------------
++    void HlmsDatablock::setCustomPieceCodeFromMemory( const String &filename, const String &shaderCode,
++                                                      CustomPieceStage::CustomPieceStage stage )
++    {
++        if( filename.empty() )
++        {
++            OGRE_ASSERT_LOW( shaderCode.empty() && "Providing shader code but the filename is empty!" );
++            if( mCustomPieceFileIdHash[stage] )
++            {
++                mCustomPieceFileIdHash[stage] = 0;
++                flushRenderables();
++            }
++        }
++        else
++        {
++            mCreator->_addDatablockCustomPieceFileFromMemory( filename, shaderCode );
++            const int32 hashNameId = static_cast<int32>( IdString( filename ).getU32Value() );
++            mCustomPieceFileIdHash[stage] = hashNameId;
++            flushRenderables();
++        }
++    }
++    //-----------------------------------------------------------------------------------
++    void HlmsDatablock::setCustomPieceFile( const String &filename, const String &resourceGroup,
++                                            CustomPieceStage::CustomPieceStage stage )
++    {
++        if( filename.empty() )
++        {
++            if( mCustomPieceFileIdHash[stage] )
++            {
++                mCustomPieceFileIdHash[stage] = 0;
++                flushRenderables();
++            }
++        }
++        else
++        {
++            const int32 hashNameId = static_cast<int32>( IdString( filename ).getU32Value() );
++            if( mCustomPieceFileIdHash[stage] != hashNameId )
++            {
++                mCreator->_addDatablockCustomPieceFile( filename, resourceGroup );
++                mCustomPieceFileIdHash[stage] = hashNameId;
++                flushRenderables();
++            }
++        }
++    }
++    //-----------------------------------------------------------------------------------
++    int32 HlmsDatablock::getCustomPieceFileIdHash( CustomPieceStage::CustomPieceStage stage ) const
++    {
++        OGRE_ASSERT_LOW( stage < CustomPieceStage::NumCustomPieceStages );
++        return mCustomPieceFileIdHash[stage];
++    }
++    //-----------------------------------------------------------------------------------
++    const String &HlmsDatablock::getCustomPieceFileStr( CustomPieceStage::CustomPieceStage stage ) const
++    {
++        OGRE_ASSERT_LOW( stage < CustomPieceStage::NumCustomPieceStages );
++        if( !mCustomPieceFileIdHash[stage] )
++            return BLANKSTRING;
++        return mCreator->getDatablockCustomPieceFileNameStr( mCustomPieceFileIdHash[stage] );
++    }
++    //-----------------------------------------------------------------------------------
++    void HlmsDatablock::setCustomProperties( CustomPropertyVec &properties, bool bSwap )
++    {
++        if( bSwap )
++            mCustomProperties.swap( properties );
++        else
++            mCustomProperties = properties;
++        flushRenderables();
++    }
++    //-----------------------------------------------------------------------------------
+     void HlmsDatablock::setMacroblock( const HlmsMacroblock &macroblock, const bool casterBlock,
+                                        const bool overrideCasterBlock )
+     {
+diff --git a/OgreMain/src/OgreHlmsDiskCache.cpp b/OgreMain/src/OgreHlmsDiskCache.cpp
+index f9f1571e83..4cf7d67782 100644
+--- a/OgreMain/src/OgreHlmsDiskCache.cpp
++++ b/OgreMain/src/OgreHlmsDiskCache.cpp
+@@ -42,7 +42,7 @@ THE SOFTWARE.
+ 
+ namespace Ogre
+ {
+-    static const uint16 c_hlmsDiskCacheVersion = 4u;
++    static const uint16 c_hlmsDiskCacheVersion = 5u;
+ 
+     HlmsDiskCache::HlmsDiskCache( HlmsManager *hlmsManager ) :
+         mTemplatesOutOfDate( false ),
+@@ -59,6 +59,7 @@ namespace Ogre
+         mCache.type = 255;
+         mCache.sourceCode.clear();
+         mCache.pso.clear();
++        mCache.datablockCustomPieceFiles.clear();
+         mShaderProfile.clear();
+ 
+         mNativeShadingLangVer = 0u;
+@@ -105,6 +106,24 @@ namespace Ogre
+         mFastShaderBuildHack = hlms->getFastShaderBuildHack();
+         hlms->getTemplateChecksum( mCache.templateHash );
+ 
++        {
++            // Copy datablock's custom pieces
++            // (Those that came from files. The ones from memory cannot be cached).
++            mCache.datablockCustomPieceFiles.reserve( hlms->mDatablockCustomPieceFiles.size() );
++            for( const auto &itPair : hlms->mDatablockCustomPieceFiles )
++            {
++                const Hlms::DatablockCustomPieceFile &customPieceFile = itPair.second;
++                if( customPieceFile.isCacheable() )
++                {
++                    DatablockCustomPiecesCache cacheEntry;
++                    cacheEntry.filename = customPieceFile.filename;
++                    cacheEntry.resourceGroup = customPieceFile.resourceGroup;
++                    customPieceFile.getCodeChecksum( cacheEntry.sourceCodeHash );
++                    mCache.datablockCustomPieceFiles.emplace_back( cacheEntry );
++                }
++            }
++        }
++
+         {
+             // Copy shaders
+             mCache.sourceCode.reserve( hlms->mShaderCodeCache.size() );
+@@ -113,8 +132,25 @@ namespace Ogre
+ 
+             while( itor != endt )
+             {
+-                SourceCode sourceCode( *itor );
+-                mCache.sourceCode.push_back( sourceCode );
++                bool bCacheable = true;
++
++                for( size_t i = 0u; i < CustomPieceStage::NumCustomPieceStages; ++i )
++                {
++                    const int32 customPieceName =
++                        hlms->getProperty( itor->mergedCache.setProperties,
++                                           HlmsBaseProp::_DatablockCustomPieceShaderName[i] );
++                    if( customPieceName &&
++                        !hlms->isDatablockCustomPieceFileCacheable( customPieceName ) )
++                    {
++                        bCacheable = false;
++                    }
++                }
++
++                if( bCacheable )
++                {
++                    SourceCode sourceCode( *itor );
++                    mCache.sourceCode.push_back( sourceCode );
++                }
+                 ++itor;
+             }
+         }
+@@ -135,8 +171,26 @@ namespace Ogre
+                                        (uint32)HlmsBits::PassMask;
+                 // const uint32 inputLayout    = (finalHash >> HlmsBits::InputLayoutShift) & //
+                 //                              (uint32)HlmsBits::InputLayoutMask;
+-                Pso pso( hlms->mRenderableCache[renderableIdx], hlms->mPassCache[passIdx], *itor );
+-                mCache.pso.push_back( pso );
++
++                bool bCacheable = true;
++
++                for( size_t i = 0u; i < CustomPieceStage::NumCustomPieceStages; ++i )
++                {
++                    const int32 customPieceName =
++                        hlms->getProperty( hlms->mRenderableCache[renderableIdx].setProperties,
++                                           HlmsBaseProp::_DatablockCustomPieceShaderName[i] );
++                    if( customPieceName &&
++                        !hlms->isDatablockCustomPieceFileCacheable( customPieceName ) )
++                    {
++                        bCacheable = false;
++                    }
++                }
++
++                if( bCacheable )
++                {
++                    Pso pso( hlms->mRenderableCache[renderableIdx], hlms->mPassCache[passIdx], *itor );
++                    mCache.pso.push_back( pso );
++                }
+                 ++itor;
+             }
+         }
+@@ -205,12 +259,43 @@ namespace Ogre
+                 LogManager::getSingleton().logMessage(
+                     "WARNING: The cached Hlms is out of date. The templates have changed. "
+                     "We will parse the templates again. If you experience crashes or shader "
+-                    "compiler errors, delete the cache" );
++                    "compiler errors, delete the cache." );
+             }
+         }
+ 
+         hlms->clearShaderCache();
+ 
++        for( const DatablockCustomPiecesCache &datablockPiece : mCache.datablockCustomPieceFiles )
++        {
++            Hlms::CachedCustomPieceFileStatus status = hlms->_addDatablockCustomPieceFile(
++                datablockPiece.filename, datablockPiece.resourceGroup, datablockPiece.sourceCodeHash );
++            switch( status )
++            {
++            case Hlms::CCPFS_Success:
++                break;  // Everything OK, continue.
++            case Hlms::CCPFS_OutOfDate:
++                mTemplatesOutOfDate = true;
++                LogManager::getSingleton().logMessage(
++                    "WARNING: The cached Hlms is out of date. Datablock's custom piece file '" +
++                    datablockPiece.filename + "' in resource group '" + datablockPiece.resourceGroup +
++                    "' has changed. "
++                    "We will parse the templates again. If you experience crashes or shader "
++                    "compiler errors, delete the cache." );
++                break;
++            case Hlms::CCPFS_CriticalError:
++                // We could in theory recover from this error if we iterate through all the cache
++                // entries and remove the ones using this piece file. However we encountered that
++                // a file is missing. It's likely the cache has been invalidated too much.
++                LogManager::getSingleton().logMessage(
++                    "ERROR: Datablock's custom piece file '" + datablockPiece.filename +
++                        "' in resource group '" + datablockPiece.resourceGroup +
++                        "' not found! Aborting the loading of the HlmsDiskCache.",
++                    LML_CRITICAL );
++                hlms->clearShaderCache();
++                return;  // ABORT! THIS IS A RETURN!
++            }
++        }
++
+         {
+             // Compile shaders
+             SourceCodeVec::const_iterator itor = mCache.sourceCode.begin();
+@@ -359,6 +444,14 @@ namespace Ogre
+         write<uint8>( dataStream, mPrecisionMode );
+         write<bool>( dataStream, mFastShaderBuildHack );
+ 
++        write<uint32>( dataStream, static_cast<uint32>( mCache.datablockCustomPieceFiles.size() ) );
++        for( const DatablockCustomPiecesCache &datablockPiece : mCache.datablockCustomPieceFiles )
++        {
++            write( dataStream, datablockPiece.sourceCodeHash );
++            save( dataStream, datablockPiece.filename );
++            save( dataStream, datablockPiece.resourceGroup );
++        }
++
+         {
+             // Save shaders
+             write<uint32>( dataStream, static_cast<uint32>( mCache.sourceCode.size() ) );
+@@ -578,6 +671,21 @@ namespace Ogre
+         read<uint8>( dataStream, mPrecisionMode );
+         read<bool>( dataStream, mFastShaderBuildHack );
+ 
++        {
++            // Load datablock's custom pieces
++            // (Those that came from files. The ones from memory cannot be cached).
++            const uint32 numPieceFiles = read<uint32>( dataStream );
++            mCache.datablockCustomPieceFiles.reserve( numPieceFiles );
++            for( size_t i = 0u; i < numPieceFiles; ++i )
++            {
++                DatablockCustomPiecesCache datablockPiece;
++                read( dataStream, datablockPiece.sourceCodeHash );
++                load( dataStream, datablockPiece.filename );
++                load( dataStream, datablockPiece.resourceGroup );
++                mCache.datablockCustomPieceFiles.emplace_back( datablockPiece );
++            }
++        }
++
+         {
+             // Load shaders
+             uint32 numEntries = read<uint32>( dataStream );
+diff --git a/OgreMain/src/OgreHlmsJson.cpp b/OgreMain/src/OgreHlmsJson.cpp
+index 8c13d37059..3c9a22339b 100644
+--- a/OgreMain/src/OgreHlmsJson.cpp
++++ b/OgreMain/src/OgreHlmsJson.cpp
+@@ -132,6 +132,16 @@ namespace Ogre
+         "min",
+         "max"
+     };
++
++    static const char *c_customPieceKeyword[CustomPieceStage::NumCustomPieceStages] =
++    {
++        "custom_piece_file_pre",
++        "custom_piece_file_vs",
++        "custom_piece_file_ps",
++        "custom_piece_file_gs",
++        "custom_piece_file_hs",
++        "custom_piece_file_ds",
++    };
+     // clang-format on
+ 
+     HlmsJson::HlmsJson( HlmsManager *hlmsManager, HlmsJsonListener *listener ) :
+@@ -484,6 +494,39 @@ namespace Ogre
+             }
+         }
+ 
++        for( size_t i = 0u; i < CustomPieceStage::NumCustomPieceStages; ++i )
++        {
++            itor = json.FindMember( c_customPieceKeyword[i] );
++            if( itor != json.MemberEnd() && itor->value.IsArray() && itor->value.Size() == 2u &&
++                itor->value[0].IsString() && itor->value[1].IsString() )
++            {
++                datablock->setCustomPieceFile( itor->value[0].GetString(), itor->value[1].GetString(),
++                                               static_cast<CustomPieceStage::CustomPieceStage>( i ) );
++            }
++        }
++
++        itor = json.FindMember( "custom_properties" );
++        if( itor != json.MemberEnd() && itor->value.IsObject() )
++        {
++            const rapidjson::SizeType numProperties = itor->value.MemberCount();
++            HlmsDatablock::CustomPropertyVec properties;
++            properties.reserve( numProperties );
++
++            rapidjson::Value::ConstMemberIterator it = itor->value.MemberBegin();
++            rapidjson::Value::ConstMemberIterator en = itor->value.MemberEnd();
++            while( it != en )
++            {
++                if( it->name.IsString() && it->value.IsInt() )
++                {
++                    properties.push_back( HlmsDatablock::CustomProperty( it->name.GetString(),
++                                                                         int32( it->value.GetInt() ) ) );
++                }
++                ++it;
++            }
++
++            datablock->setCustomProperties( properties, true );
++        }
++
+         itor = json.FindMember( "alpha_test" );
+         if( itor != json.MemberEnd() && itor->value.IsArray() )
+         {
+@@ -991,6 +1034,47 @@ namespace Ogre
+             outString += getName( datablock->getBlendblock() );
+         }
+ 
++        for( size_t i = 0u; i < CustomPieceStage::NumCustomPieceStages; ++i )
++        {
++            const int32 hashId = datablock->getCustomPieceFileIdHash(
++                static_cast<CustomPieceStage::CustomPieceStage>( i ) );
++            if( hashId )
++            {
++                const Hlms *hlms = datablock->getCreator();
++                const Hlms::DatablockCustomPieceFile *data = hlms->getDatablockCustomPieceData( hashId );
++                OGRE_ASSERT_LOW( data );
++                if( data->isCacheable() )
++                {
++                    outString += ",\n\t\t\t\"";
++                    outString += c_customPieceKeyword[i];
++                    outString += "\" : [";
++                    outString += data->filename;
++                    outString += ", ";
++                    outString += data->resourceGroup;
++                    outString += "];";
++                }
++            }
++        }
++
++        const HlmsDatablock::CustomPropertyVec &customProperties = datablock->getCustomProperties();
++        if( !customProperties.empty() )
++        {
++            outString +=
++                ",\n\t\t\t\"custom_properties\" :"
++                "\n\t\t\t{";
++            for( const HlmsDatablock::CustomProperty &property : customProperties )
++            {
++                outString += "\n\t\t\t\t\"";
++                outString += property.keyStr;
++                outString += "\" : ";
++                outString += StringConverter::toString( property.value );
++                outString += ",";
++            }
++
++            outString.erase( outString.size() - 1 );  // Remove an extra comma
++            outString += "\n\t\t\t}";
++        }
++
+         if( datablock->getAlphaTest() != CMPF_ALWAYS_PASS )
+         {
+             outString += ",\n\t\t\t\"alpha_test\" : ";

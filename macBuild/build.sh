@@ -141,6 +141,8 @@ if [ $BUILD_OGRE = true ]; then
     git apply --3way ${SCRIPT_DIR}/../patches/ogreMetalHeadless.diff
     #Lets SceneManager::createItem take a datablock, so the Item's Hlms hash is only calculated once.
     git apply ${SCRIPT_DIR}/../patches/ogreItemDatablock.diff
+    #Backport of ogre-next master's per-datablock custom pieces and custom properties.
+    git apply ${SCRIPT_DIR}/../patches/ogreDatablockCustomPieces.diff
     #ogre-next's v2-3 into v3-0 merge (be40497) dropped a brace, so the Metal render system doesn't compile.
     git apply ${SCRIPT_DIR}/../patches/ogreMetalWindowMergeFix.diff
     ln -s ${OGRE_DEPS_DIR}/build/${CMAKE_BUILD_TYPE}/ogredeps Dependencies
