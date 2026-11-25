@@ -95,6 +95,14 @@ SDL2_DIR="${START_DIR}/SDL2"
 #OpenALSoft
 OPENALSOFT_TARGET_BRANCH="1.24.3"
 OPENALSOFT_DIR="${START_DIR}/OpenALSoft"
+OGG_TARGET_BRANCH="v1.3.6"
+OGG_DIR="${START_DIR}/libogg"
+VORBIS_TARGET_BRANCH="v1.3.7"
+VORBIS_DIR="${START_DIR}/libvorbis"
+FLAC_TARGET_BRANCH="1.5.0"
+FLAC_DIR="${START_DIR}/flac"
+OPUS_TARGET_BRANCH="v1.6.1"
+OPUS_DIR="${START_DIR}/opus"
 LIBSNDFILE_TARGET_BRANCH="master"
 LIBSNDFILE_DIR="${START_DIR}/libsndfile"
 
@@ -300,14 +308,52 @@ if [ $BUILD_OPENALSOFT = true ]; then
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project OpenAL.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project OpenAL.xcodeproj -destination='Any Mac'
 
+    #ogg, vorbis, flac and opus are needed by libsndfile for ogg vorbis support.
+    git clone --branch ${OGG_TARGET_BRANCH} https://github.com/xiph/ogg.git ${OGG_DIR}
+    cd ${OGG_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libogg -DBUILD_TESTING=False -DINSTALL_DOCS=False ../..
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project ogg.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project ogg.xcodeproj -destination='Any Mac'
+
+    git clone --branch ${VORBIS_TARGET_BRANCH} https://github.com/xiph/vorbis.git ${VORBIS_DIR}
+    cd ${VORBIS_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libvorbis -DCMAKE_PREFIX_PATH=${INSTALL_DIR}/libogg -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ../..
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project vorbis.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project vorbis.xcodeproj -destination='Any Mac'
+
+    git clone --branch ${FLAC_TARGET_BRANCH} https://github.com/xiph/flac.git ${FLAC_DIR}
+    cd ${FLAC_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/flac -DCMAKE_PREFIX_PATH=${INSTALL_DIR}/libogg -DBUILD_CXXLIBS=False -DBUILD_PROGRAMS=False -DBUILD_EXAMPLES=False -DBUILD_TESTING=False -DBUILD_DOCS=False -DINSTALL_MANPAGES=False ../..
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project FLAC.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project FLAC.xcodeproj -destination='Any Mac'
+
+    git clone --branch ${OPUS_TARGET_BRANCH} https://github.com/xiph/opus.git ${OPUS_DIR}
+    cd ${OPUS_DIR}
+    mkdir -p build/${CMAKE_BUILD_TYPE}
+    cd build/${CMAKE_BUILD_TYPE}
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/opus -DBUILD_TESTING=False ../..
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project Opus.xcodeproj -destination='Any Mac'
+    xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project Opus.xcodeproj -destination='Any Mac'
+
     #libsndfile which is a dependency for audio.
     git clone --branch ${LIBSNDFILE_TARGET_BRANCH} https://github.com/libsndfile/libsndfile.git ${LIBSNDFILE_DIR}
     cd ${LIBSNDFILE_DIR}
     mkdir -p build/${CMAKE_BUILD_TYPE}
     cd build/${CMAKE_BUILD_TYPE}
-    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
+    ${CMAKE_EXEC} ${CMAKE_BUILD_SETTINGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/libsndfile "-DCMAKE_PREFIX_PATH=${INSTALL_DIR}/libogg;${INSTALL_DIR}/libvorbis;${INSTALL_DIR}/flac;${INSTALL_DIR}/opus" -DBUILD_PROGRAMS=False -DBUILD_EXAMPLES=False -DBUILD_TESTING=False -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=True ../..
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme ALL_BUILD -project libsndfile.xcodeproj -destination='Any Mac'
     xcodebuild -configuration ${CMAKE_BUILD_TYPE} -scheme install -project libsndfile.xcodeproj -destination='Any Mac'
+
+    #avEngine only links libsndfile, so merge the codecs into its archive.
+    cd ${INSTALL_DIR}/libsndfile/lib
+    libtool -static -o libsndfileCombined.a libsndfile.a ${INSTALL_DIR}/libvorbis/lib/libvorbisenc.a ${INSTALL_DIR}/libvorbis/lib/libvorbis.a ${INSTALL_DIR}/flac/lib/libFLAC.a ${INSTALL_DIR}/opus/lib/libopus.a ${INSTALL_DIR}/libogg/lib/libogg.a
+    mv libsndfileCombined.a libsndfile.a
 else
     echo "Skipping OpenALSoft build"
 fi

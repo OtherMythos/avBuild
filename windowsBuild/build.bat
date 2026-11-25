@@ -68,6 +68,14 @@ SET SDL2_DIR="%START_DIR%\SDL2"
 ::OpenALSoft
 SET "OPENALSOFT_TARGET_BRANCH=1.22.2"
 SET "OPENALSOFT_DIR=%START_DIR%\OpenALSoft"
+SET "OGG_TARGET_BRANCH=v1.3.6"
+SET "OGG_DIR=%START_DIR%\libogg"
+SET "VORBIS_TARGET_BRANCH=v1.3.7"
+SET "VORBIS_DIR=%START_DIR%\libvorbis"
+SET "FLAC_TARGET_BRANCH=1.5.0"
+SET "FLAC_DIR=%START_DIR%\flac"
+SET "OPUS_TARGET_BRANCH=v1.6.1"
+SET "OPUS_DIR=%START_DIR%\opus"
 SET "LIBSNDFILE_TARGET_BRANCH=1.1.0"
 SET "LIBSNDFILE_DIR=%START_DIR%\libsndfile"
 
@@ -223,14 +231,51 @@ IF %BUILD_OPENALSOFT% equ true (
     cmake --build . %CMAKE_CONFIG_SETTINGS%
     cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
 
-    ::libsndfile which is a dependency for audio.
+    ::ogg, vorbis, flac and opus are needed by libsndfile for ogg vorbis support.
+    git clone --branch %OGG_TARGET_BRANCH% https://github.com/xiph/ogg.git %OGG_DIR%
+    cd %OGG_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libogg -DBUILD_TESTING=False -DINSTALL_DOCS=False ../..
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+
+    git clone --branch %VORBIS_TARGET_BRANCH% https://github.com/xiph/vorbis.git %VORBIS_DIR%
+    cd %VORBIS_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libvorbis -DCMAKE_PREFIX_PATH=%INSTALL_DIR%/libogg -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ../..
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+
+    git clone --branch %FLAC_TARGET_BRANCH% https://github.com/xiph/flac.git %FLAC_DIR%
+    cd %FLAC_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/flac -DCMAKE_PREFIX_PATH=%INSTALL_DIR%/libogg -DBUILD_CXXLIBS=False -DBUILD_PROGRAMS=False -DBUILD_EXAMPLES=False -DBUILD_TESTING=False -DBUILD_DOCS=False -DINSTALL_MANPAGES=False ../..
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+
+    git clone --branch %OPUS_TARGET_BRANCH% https://github.com/xiph/opus.git %OPUS_DIR%
+    cd %OPUS_DIR%
+    mkdir "build\%CMAKE_BUILD_TYPE%"
+    cd "build\%CMAKE_BUILD_TYPE%"
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/opus -DBUILD_TESTING=False ../..
+    cmake --build . %CMAKE_CONFIG_SETTINGS%
+    cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+
+    ::libsndfile which is a dependency for audio. Prefer the cmake configs, as the static FLAC target defines FLAC__NO_DLL which MSVC needs.
     git clone --branch %LIBSNDFILE_TARGET_BRANCH% https://github.com/libsndfile/libsndfile.git %LIBSNDFILE_DIR%
     cd %LIBSNDFILE_DIR%
     mkdir "build/%CMAKE_BUILD_TYPE%"
     cd "build/%CMAKE_BUILD_TYPE%"
-    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libsndfile -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=False ../..
+    cmake %CMAKE_BUILD_SETTINGS% -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%/libsndfile "-DCMAKE_PREFIX_PATH=%INSTALL_DIR%/libogg;%INSTALL_DIR%/libvorbis;%INSTALL_DIR%/flac;%INSTALL_DIR%/opus" -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=True -DBUILD_PROGRAMS=False -DBUILD_EXAMPLES=False -DBUILD_TESTING=False -DENABLE_MPEG=False -DENABLE_EXTERNAL_LIBS=True -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ../..
     cmake --build . %CMAKE_CONFIG_SETTINGS%
     cmake --build . --target install %CMAKE_CONFIG_SETTINGS%
+
+    ::avEngine only links libsndfile, so merge the codecs into its archive using the lib.exe found by cmake.
+    FOR /F "tokens=2 delims==" %%A IN ('findstr /B "CMAKE_AR:" CMakeCache.txt') DO "%%A" /OUT:%INSTALL_DIR%\libsndfile\lib\sndfileCombined.lib %INSTALL_DIR%\libsndfile\lib\sndfile.lib %INSTALL_DIR%\libvorbis\lib\vorbisenc.lib %INSTALL_DIR%\libvorbis\lib\vorbis.lib %INSTALL_DIR%\flac\lib\FLAC.lib %INSTALL_DIR%\opus\lib\opus.lib %INSTALL_DIR%\libogg\lib\ogg.lib
+    move /Y %INSTALL_DIR%\libsndfile\lib\sndfileCombined.lib %INSTALL_DIR%\libsndfile\lib\sndfile.lib
 )
 
 ::nativefiledialog
